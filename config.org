@@ -1,0 +1,1817 @@
+#+TITLE: Configuration
+#+AUTHOR: Kalelzar
+#+INCLUDE: util.org
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+
+;;; config.el -- Tangled source code of config.org
+;;; Commentary:
+;;; This is just an executable file created by pasting
+;;; all emacs-lisp source code blocks from config.org into
+;;; this file.
+
+;;; Code:
+
+(defun --init-message (str) (message (concat "[config] " str)))
+
+(--init-message "Initializing in config.org")
+#+END_SRC
+
+
+
+* Personal Information
+#+BEGIN_SRC emacs-lisp :tangle yes
+(--init-message "Setting personal information")
+(setq user-full-name "Borislav Atanasov"
+      user-mail-address "natomanofglory@gmail.com")
+#+END_SRC
+* Misc
+
+Set the cusomize file to a separate file.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(--init-message (concat "Set custom file to " (prin1-to-string (expand-file-name "custom.el" user-emacs-directory))))
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(--init-message "Loading custom file...")
+(load custom-file)
+(--init-message "Loading custom file... Done")
+#+END_SRC
+
+Set up [[https://melpa.org/#/lsp-mode][Language Server Protocol]]
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package lsp-mode :commands lsp)
+(use-package lsp-ui :commands lsp-ui-mode)
+(use-package company-lsp :commands company-lsp)
+#+END_SRC
+
+Kill. Whole. Lines. This should be the default.
+
+#+begin_src emacs-lisp :tangle yes
+(setq kill-whole-line t)
+#+end_src
+
+I don't actually know what this does but the EmacsWiki told me to
+put it in.
+
+#+begin_src emacs-lisp :tangle yes
+(autoload 'wl "wl" "Wanderlust" t)
+#+end_src
+
+Watch my [[https://melpa.org/#/activity-watch-mode][emacs activity]] with [[https://github.com/ActivityWatch/activitywatch/][ActivityWatch]]
+
+#+begin_src emacs-lisp :tangle yes
+(use-package activity-watch-mode
+ :ensure t)
+(global-activity-watch-mode)
+(diminish 'activity-watch-mode)
+#+end_src
+
+Global semantic mode for my programming needs.
+#+begin_src emacs-lisp :tangle yes
+(semantic-mode 1)
+(diminish 'semantic-mode)
+#+end_src
+
+Set [[https://github.com/pwmt/zathura][zathura]] as the default pdf viewer
+
+#+BEGIN_SRC bash
+sudo pacman -S zathura zathura-pdf-mupdf
+#+END_SRC
+
+#+begin_src emacs-lisp :tangle yes
+(with-eval-after-load 'tex
+  (require 'tex)
+  (add-to-list 'TeX-view-program-selection
+               '(output-pdf "Zathura")))
+#+end_src
+
+More convenient ~*scratch*~ buffers
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package scratch
+  :ensure t
+  :commands scratch)
+#+END_SRC
+
+Undo trees
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package undo-tree
+  :ensure t)
+(global-undo-tree-mode)
+(diminish 'undo-tree-mode)
+#+END_SRC
+
+
+Allow the registering of local packages
+
+#+begin_src emacs-lisp :tangle yes
+      (defun use-local-package (package &rest args)
+        (add-to-list 'load-path
+                     (concat user-emacs-directory
+                             (concat "elpa/" (symbol-name package))))
+        (require package)
+      )
+#+end_src
+
+Crux
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package crux
+  :ensure t)
+#+END_SRC
+
+#+RESULTS:
+: crux-view-url
+
+Revert buffer automatically when underlying file is changed outside of Emacs.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(global-auto-revert-mode t)
+#+END_SRC
+
+Smarter tab.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq tab-always-indent 'complete)
+#+END_SRC
+
+Switch between visible buffers / frames with shift + arrow keys
+
+This requires =framemove.el= from [[https://github.com/emacsmirror/emacswiki.org/blob/master/framemove.el][EmacsWiki]].
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package windmove :ensure t)
+;(add-to-list 'load-path "~/.config/emacs/elpa/framemove/")
+;(require 'framemove)
+(use-local-package 'framemove)
+(windmove-default-keybindings)
+(setq framemove-hook-into-windmove t)
+#+END_SRC
+
+
+
+Save buffers on buffer switch
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package super-save :ensure t)
+;; add integration with ace-window
+(add-to-list 'super-save-triggers 'ace-window)
+(super-save-mode +1)
+(diminish 'super-save-mode)
+#+END_SRC
+
+Highlighting
+#+BEGIN_SRC emacs-lisp :tangle yes
+(global-hl-line-mode +1)
+(diminish 'hl-line-mode)
+;(use-package volatile-highlights :ensure t)
+;(volatile-highlights-mode 0)
+;(diminish 'volatile-highlights-mode)
+#+END_SRC
+
+#+RESULTS:
+: t
+
+Add the ability to kill the current line without marking it
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+;(use-package rect :ensure t)
+(require 'rect)
+(crux-with-region-or-line kill-region)
+(crux-with-region-or-line kill-ring-save)
+#+END_SRC
+
+Automatically clean up unused buffers.
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package midnight :ensure t)
+#+END_SRC
+
+Do not activate mark if there is no active region when
+~exchange-point-and-mark~ (C-x C-x by default) is called.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(defadvice exchange-point-and-mark (before deactivate-mark activate compile)
+  "When called with no active region, do not activate mark."
+  (interactive "P")
+   (list (not (region-active-p))))
+#+END_SRC
+
+Create macro for calling functions on region or buffer
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+;  (use-package tabify :ensure t)
+(defmacro with-region-or-buffer (func)
+  "When called with no active region, call FUNC on current buffer."
+  `(defadvice ,func (before with-region-or-buffer activate compile)
+     (interactive
+      (if mark-active
+          (list (region-beginning) (region-end))
+        (list (point-min) (point-max))))))
+
+(with-region-or-buffer indent-region)
+;  (with-region-or-buffer untabify)
+#+END_SRC
+
+Show available keybindings after you start typing
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+
+;; show available keybindings after you start typing
+(use-package which-key :ensure t)
+(which-key-mode +1)
+(which-key-enable-god-mode-support nil)
+(diminish 'which-key-mode)
+#+END_SRC
+
+#+RESULTS:
+: t
+
+Following config mostly taken from [[https://github.com/bbatsov][bbatsov's]] [[https://github.com/bbatsov/prelude][Prelude]].
+
+#+begin_src emacs-lisp :tangle yes
+
+;; Copyright © 2011-2020 Bozhidar Batsov
+;;
+;; Author: Bozhidar Batsov <bozhidar@batsov.com>
+;; URL: https://github.com/bbatsov/prelude
+;; Version: 1.0.0
+;; Keywords: convenience
+
+(use-package smartparens :ensure t)
+
+(defun prelude-local-comment-auto-fill ()
+  (set (make-local-variable 'comment-auto-fill-only-comments) t))
+
+;; show the name of the current function definition in the modeline
+(use-package which-func :ensure t)
+(which-function-mode 1)
+
+;; font-lock annotations like TODO in source code
+(use-package hl-todo :ensure t)
+(global-hl-todo-mode 1)
+
+;; in Emacs 24 programming major modes generally derive from a common
+;; mode named prog-mode; for others, we'll arrange for our mode
+;; defaults function to run prelude-prog-mode-hook directly.  To
+;; augment and/or counteract these defaults your own function
+;; to prelude-prog-mode-hook, using:
+;;
+;;     (add-hook 'prelude-prog-mode-hook 'my-prog-mode-defaults t)
+;;
+;; (the final optional t sets the *append* argument)
+
+;; smart curly braces
+(sp-pair "{" nil :post-handlers
+         '(((lambda (&rest _ignored)
+              (crux-smart-open-line-above)) "RET")))
+
+(defun prelude-prog-mode-defaults ()
+  "Default coding hook, useful with any programming language."
+  (flyspell-prog-mode)
+  (smartparens-mode +1)
+  (prelude-local-comment-auto-fill))
+
+(setq prelude-prog-mode-hook 'prelude-prog-mode-defaults)
+
+(add-hook 'prog-mode-hook (lambda ()
+                            (run-hooks 'prelude-prog-mode-hook)))
+
+;; enable on-the-fly syntax checking
+(if (fboundp 'global-flycheck-mode)
+    (global-flycheck-mode +1)
+  (add-hook 'prog-mode-hook 'flycheck-mode))
+
+#+end_src
+
+* Sane Defaults
+
+Some are sourced from [[https://github.com/danielmai/.emacs.d/blob/master/config.org][Daniel Mai's config]].
+
+For some reason these functions are disabled.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(put 'downcase-region 'disabled nil)
+(put 'upcase-region 'disabled nil)
+(put 'narrow-to-region 'disabled nil)
+(put 'dired-find-alternate-file 'disabled nil)
+#+END_SRC
+
+#+RESULTS:
+
+Yes is two letters too long for me.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (defalias 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+
+#+RESULTS:
+: yes-or-no-p
+
+Clean up back-ups / autosaves.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq backup-directory-alist `(("." . ,(concat user-emacs-directory "backups"))))
+(setq auto-save-file-name-transforms `((".*" ,(concat user-emacs-directory "auto-save-list/") t)))
+#+END_SRC
+
+#+RESULTS:
+
+UTF-8.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq locale-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-selection-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+#+END_SRC
+
+Don't indent with TABS please.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (setq-default indent-tabs-mode nil)
+#+END_SRC
+
+#+RESULTS:
+
+Indicate empty lines.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (setq-default indicate-empty-lines t)
+#+END_SRC
+
+Don't count two spaces after a period as the end of a sentence.
+Just one space is needed.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (setq sentence-end-double-space nil)
+#+END_SRC
+
+Delete the region when typing.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(delete-selection-mode t)
+#+END_SRC
+
+Logical buffer names.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq uniquify-buffer-name-style 'forward)
+#+END_SRC
+
+Load aliases from .bash_profile
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq shell-command-switch "-ic")
+#+END_SRC
+
+Silence!
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq visible-bell t)
+(setq ring-bell-function 'ignore)
+#+END_SRC
+
+* Modes
+** Yasnippet
+
+
+Enable Yasnippets.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package yasnippet
+    :ensure t
+    :diminish yas-minor-mode)
+    ;(add-to-list yas-snippet-dirs (concat user-emacs-directory "snippets"))
+    (setq yas-indent-line 'fixed)
+    (yas-global-mode)
+#+END_SRC
+
+We do however still need some snippets.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package common-lisp-snippets :ensure t)
+(use-package yasnippet-snippets :ensure t)
+#+END_SRC
+
+#+RESULTS:
+** Org
+
+Fetch the latest version of org mode as per [[http://orgmode.org/elpa.html][this instructions]].
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package org :ensure org-plus-contrib)
+#+END_SRC
+
+*** Babel
+
+Don't ask for confirmation when evaluating code blocks.
+It's annoying.
+
+#+begin_src emacs-lisp :tangle yes
+  (setq org-confirm-babel-evaluate nil)
+#+end_src
+
+Enable some languages for evaluation in Org code blocks.
+
+#+begin_src emacs-lisp :tangle yes
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python . t)
+     (C . t)
+     (shell . t)))
+#+end_src
+
+*** Export
+
+I mainly export to $\LaTeX$ but that comes installed by default.
+
+I also occasionally have need to export to [[https://melpa.org/#/ox-epub][epub]].
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package ox-epub
+    :ensure t)
+#+END_SRC
+
+#+begin_src emacs-lisp :tangle yes
+  (setq org-export-backends
+     (quote
+      (ascii beamer html latex epub)))
+#+end_src
+
+Enable linting of source code blocks when exported to $\LaTeX$
+This requires [[https://github.com/gpoore/minted][minted]].
+
+On Archlinux:
+
+#+BEGIN_SRC bash
+sudo pacman -S minted
+#+END_SRC
+
+You also might need to install some of the (La)TeX libraries included by your distribution.
+
+#+begin_src emacs-lisp :tangle yes
+  (require 'ox-latex)
+  (add-to-list 'org-latex-packages-alist '("" "minted"))
+  (add-to-list 'org-latex-packages-alist '("" "color"))
+  (add-to-list 'org-latex-packages-alist '("" "xcolor"))
+  (setq org-latex-listings 'minted)
+
+  (setq org-latex-pdf-process
+        '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+          "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+          "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+#+end_src
+
+*** Templates
+
+Enable Org Tempo mode for template expansion
+
+#+begin_src emacs-lisp :tangle yes
+  (require 'org-tempo)
+#+end_src
+
+Source blocks
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python"))
+  (add-to-list 'org-structure-template-alist '("sh" . "src sh"))
+  (add-to-list 'org-structure-template-alist '("bh" . "src bash"))
+  (add-to-list 'org-structure-template-alist '("sc" . "src scala"))
+#+END_SRC
+*** Misc
+Set up emphasis symbols
+
+#+begin_src emacs-lisp :tangle yes
+  (setq org-emphasis-alist
+        (quote
+         (("*" bold)
+          ("/" italic)
+          ("_" underline)
+          ("=" org-verbatim verbatim)
+          ("~" org-code verbatim)
+          ("+"
+           (:strike-through t)))))
+#+end_src
+
+Set up better link previews using [[https://github.com/stardiviner/org-link-beautify][org-link-beautify]].
+
+It is not available in MELPA.
+
+So we have to install it manually.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  ;(add-to-list 'load-path "~/.emacs.d/elpa/org-link-beautify/")
+  ;(use-package org-link-beautify)
+  (use-local-package 'org-link-beautify)
+#+END_SRC
+
+Or so I would like. But it's way too laggy and the icons show up wrong for me.
+
+Enable some good minor modes for working with org-mode
+when /in/ org-mode.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package org-superstar :ensure t)
+  ;(use-package org-sticky-header :ensure t)
+  (use-package cdlatex :ensure t)
+
+  (defun org-mode-enable-minor-modes-hook ()
+    "Enable some good minor-modes for fancier 'org-mode' experience."
+    (org-superstar-mode 1)
+    (diminish 'org-superstar-mode)
+    ;(org-sticky-header-mode 1)
+    (org-indent-mode 1)
+    (diminish 'org-indent-mode)
+    (org-cdlatex-mode 1) ; Maybe don't keep this on at all times
+                         ; Or change the keybinding from '`' since it is
+                         ; sometimes used in emacs lisp
+    (diminish 'org-cdlatex-mode)
+    (yas-minor-mode 1)
+    (diminish 'yas-minor-mode)
+    (fira-code-mode 1)
+    (diminish 'fira-code-mode)
+;    (org-link-beautify-mode 1)
+    )
+
+  (add-hook 'org-mode-hook 'org-mode-enable-minor-modes-hook)
+#+end_src
+
+Let TAB behave as expected when inside code block.
+
+#+begin_src emacs-lisp :tangle yes
+  (setq org-src-tab-acts-natively t)
+#+end_src
+
+Set the default notes file.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq org-default-notes-file "~/Documents/notes.org")
+(--init-message (concat "Set default notes file to: " org-default-notes-file))
+#+END_SRC
+
+Enable speed commands.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq org-use-speed-commands t)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq org-tags-column 45)
+#+END_SRC
+
+Enable windmove/framemove in org-mode.
+
+#+begin_src emacs-lisp :tangle yes
+;(setq org-support-shift-select nil)
+(add-hook 'org-shiftup-final-hook 'windmove-up)
+(add-hook 'org-shiftleft-final-hook 'windmove-left)
+(add-hook 'org-shiftdown-final-hook 'windmove-down)
+(add-hook 'org-shiftright-final-hook 'windmove-right)
+(--init-message "Enabled windmove in org-mode.")
+#+end_src
+
+Make latex previews in org-mode twice as big.
+
+#+begin_src emacs-lisp :tangle yes
+;;(setq org-format-latex-options (append '(:scale 2.0) org-format-latex-options ))
+;; Is being customized
+#+end_src
+
+Add custom TODO keywords
+
+#+begin_src emacs-lisp :tangle yes
+
+(setq org-todo-keywords
+  '((sequence "NEW(n!)" "SCHEDULED(s!)" "IMMINENT(i!)" "ACTIVE(a!)" "|" "DONE(d!)" "CANCELLED(c!)")
+    (sequence "SUSPENDED(p!)")
+    (sequence "EXPORT(e)" "|" "EXPORTED")))
+#+end_src
+
+Set custom faces for TODO keywords.
+
+#+begin_src emacs-lisp :tangle yes
+(setq org-todo-keyword-faces
+  '(("NEW" . "#004488" )
+    ("SCHEDULED" . "#aa6600")
+    ("IMMINENT" . "#006622")
+    ("ACTIVE" . (:background "#004400" :foreground "white" :weight bold ))
+    ("SUSPENDED" . (:background "#440000" :foreground "white" :weight bold ))
+    ("DONE" . (:foreground "#204420" :weight bold))
+    ("CANCELLED" . "#616161" )
+    ("EXPORT" . (:background "#443322" :foreground "#ffaa00" ))
+    ("EXPORTED" . "#414141" )))
+#+end_src
+
+
+Enforce todo dependencies.
+
+#+begin_src emacs-lisp :tangle yes
+(setq org-enforce-todo-dependencies t)
+#+end_src
+
+Enable org-drill.
+
+#+begin_src emacs-lisp :tangle yes
+(use-package org-drill
+  :ensure t)
+(setq org-drill-hide-item-headings-p t)
+#+end_src
+
+*** Agenda
+
+Register the agenda files.
+
+#+begin_src emacs-lisp :tangle yes
+(defvar org-agenda-files-root
+  "~/Documents/" "Store the root of all org-agenda files")
+
+;(setq org-agenda-files nil)
+
+(defvar org-agenda-files-assoc
+  '(( "agenda" . ( "* NEW %?\nAdded on %U\n%i" org-ask-location))
+    ( "notes" . "* NEW %?\nAdded on %U\n%i")
+    ( "tickler" . "* NEW %?\nDEADLINE: %^{Deadline}T\nAdded on %U\n%a\n%i"))
+"A agenda name associated with the format for org-capture entries."
+)
+
+(defun expand-to-agenda-file (file)
+  "Expand FILE to a path to an .org file located at `org-agenda-files-root'."
+  (concat (concat org-agenda-files-root file) ".org"))
+
+
+(defun org-register-agenda-file (file)
+  "Register an agenda FILE."
+  (add-to-list 'org-agenda-files
+               (expand-to-agenda-file file)))
+
+
+(seq-do 'org-register-agenda-file
+              (mapcar (lambda (elem)  (car elem))
+                      org-agenda-files-assoc))
+
+(defvar org-agenda-shortcuts-prefix-key "H-z"
+  "Prefix key for accessing org-agenda-shortcuts")
+
+(bind-key
+ (concat org-agenda-shortcuts-prefix-key
+         (concat " " org-agenda-shortcuts-prefix-key))
+ 'previous-buffer)
+
+(defun generate-shortcuts-to-agenda-file (agenda-file)
+  (let* ((key (char-to-string (string-to-char agenda-file)))
+         (key-chords (concat org-agenda-shortcuts-prefix-key (concat " " key))))
+    (bind-key key-chords `(lambda () (interactive) (find-file (expand-to-agenda-file ,agenda-file))))
+    (which-key-add-key-based-replacements key-chords agenda-file)
+))
+
+(seq-do 'generate-shortcuts-to-agenda-file
+              (mapcar (lambda (elem)  (car elem))
+                      org-agenda-files-assoc))
+
+#+end_src
+
+Create capture templates for quick writes to different
+agenda files.
+
+#+begin_src emacs-lisp :tangle yes
+(defun org-ask-location ()
+  (setq org-refile-use-outline-path nil)
+  (let* ((org-refile-targets '((nil :maxlevel . 1)))
+         (hd (condition-case nil
+                 (car (org-refile-get-location "Headline" nil t))
+               (error (car org-refile-history)))))
+    (goto-char (point-min))
+    (outline-next-heading)
+    (if (re-search-forward
+         (format org-complex-heading-regexp-format (regexp-quote hd))
+         nil t)
+        (goto-char (point-at-bol))
+      (goto-char (point-max))
+      (or (bolp) (insert "\n"))
+      (insert "* " hd "\n")))
+  (setq org-refile-use-outline-path 'file)
+  (end-of-line))
+
+(setq org-capture-templates nil)
+
+(defun build-capture-template-definition
+    (capture-key capture-description agenda-file template)
+  "Generate a capture template.
+ The capture template can be accessed with CAPTURE-KEY.
+ It is described by CAPTURE-DESCRIPTION.
+ It points to AGENDA-FILE.
+ And it uses TEMPLATE to generate the entry.
+ TEMPLATE is either a string with which to format the entry,
+ or a cons cell of a string with which to format the entry and a function which
+ tells where exactly in the file to add the new entry."
+  (append (list capture-key capture-description)
+          '(entry)
+          (if (char-or-string-p template)
+          (list (append '(file)
+                        (list agenda-file)))
+          (list (append '(file+function)
+                        (list agenda-file) (cdr template))))
+          (if (char-or-string-p template)
+              (list template)
+              (list (car template)))))
+
+(defun org-generate-agenda-capture-template-definition (agenda-file)
+  (let* ((agenda-name (file-name-base agenda-file))
+         (capture-key (char-to-string (string-to-char agenda-name)))
+         (capture-description (concat (concat "Add entry to " agenda-name) "."))
+         (template (cdr (assoc agenda-name org-agenda-files-assoc))))
+    (build-capture-template-definition
+     capture-key capture-description agenda-file template)
+    ))
+
+(defun register-agenda-capture-template-from-agenda-file (agenda-file)
+  (add-to-list 'org-capture-templates
+      (org-generate-agenda-capture-template-definition agenda-file))
+)
+
+(defun register-agenda-capture-templates-from-agenda-files ()
+  (seq-do 'register-agenda-capture-template-from-agenda-file
+        org-agenda-files
+        ))
+
+(register-agenda-capture-templates-from-agenda-files)
+
+(add-to-list 'org-capture-templates
+  (build-capture-template-definition "e" "Export entry"
+    (expand-to-agenda-file "notes")
+    "* EXPORT %?\nAdded on %U\n%i" ))
+
+#+end_src
+
+Add state changes to a drawer.
+
+#+begin_src emacs-lisp :tangle yes
+(setq org-log-into-drawer t)
+#+end_src
+
+Set up archivation.
+
+#+begin_src emacs-lisp :tangle yes
+(setq org-archive-location (concat (expand-to-agenda-file "archive") "::"))
+
+;;Requires Org >= 9.4
+;(setq org-archive-subtree-save-file-p t)
+;;Org < 9.4
+
+(defun save-notes-archive-file ()
+  (interactive)
+  (save-some-buffers
+   'no-confirm (lambda ()
+                 (equal buffer-file-name
+                        (expand-file-name (expand-to-agenda-file "archive"))))))
+
+(advice-add 'org-archive-subtree :after #'save-notes-archive-file)
+
+#+end_src
+
+Set up refiling
+
+#+begin_src emacs-lisp :tangle yes
+(setq org-refile-use-outline-path 'file)
+(setq org-refile-targets '((org-agenda-files . (:level . 0))))
+
+(defvar org-files-refile-internally
+(list (expand-file-name (expand-to-agenda-file "agenda")))
+"List of files which should be offered a list of internal headlines
+instead of other files")
+
+(defun dynamic-org-refile-get-targets (func &rest args)
+  "Extend `org-refile-get-targets' in various contexts.
+   If the file visited in current buffer is inside
+   `org-files-refile-internally' then show a list of top-level headings to
+   refile to instead of the default `org-refile-targets'.
+   If the file visited in current buffer is a member of
+   `org-agenda-files', remove it from the list so it doesn't clutter the
+   target list. All changes to variables are restored at the end of the
+   function."
+   (setq org-refile-history nil)
+   (let ((current-file (buffer-file-name (current-buffer))))
+     (if (member current-file org-files-refile-internally)
+         (let ((org-refile-use-outline-path nil)
+               (org-refile-targets nil))
+           (apply func args))
+       (let ((org-agenda-files (remove-if
+           (lambda (file)
+             (equal current-file (expand-file-name file)))
+           org-agenda-files)))
+         (apply func args)))))
+(advice-add 'org-refile-get-targets :around #'dynamic-org-refile-get-targets)
+
+#+end_src
+
+Set up alerts for agenda items.
+
+#+begin_src emacs-lisp :tangle yes
+(use-package org-wild-notifier :ensure t)
+(setq alert-default-style 'libnotify)
+(setq org-wild-notifier-keyword-whitelist nil)
+(org-wild-notifier-mode 1)
+#+end_src
+
+** C/C++
+
+Set LSP for C/C++ using [[https://github.com/MaskRay/ccls][ccls]].
+
+#+BEGIN_SRC bash
+sudo pacman -S ccls
+#+END_SRC
+
+We also need the [[https://melpa.org/#/ccls][emacs package]].
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package ccls :ensure t
+    :hook ((c-mode c++-mode objc-mode cuda-mode) .
+           (lambda () (require 'ccls) (lsp))))
+
+  (setq ccls-executable "/usr/bin/ccls")
+#+end_src
+
+#+RESULTS:
+: /usr/bin/ccls
+
+Enable some refactoring with [[https://melpa.org/#/srefactor][srefactor]].
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package srefactor :ensure t)
+#+end_src
+
+This package displays function signatures in the mode line.
+#+begin_src emacs-lisp :tangle yes
+ (use-package c-eldoc
+  :commands c-turn-on-eldoc-mode
+  :ensure t
+  :init (add-hook 'c-mode-hook #'c-turn-on-eldoc-mode))
+#+end_src
+
+#+RESULTS:
+
+** Novel mode
+
+#+begin_src emacs-lisp :tangle yes
+;(add-to-list 'load-path "~/.emacs.d/elpa/novel-mode/")
+;(use-package novel-mode)
+(use-local-package 'novel-mode)
+#+end_src
+
+** Edit Server
+
+
+Enable editing of browser text fields in Emacs.
+Just because it's possible.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package edit-server
+    :ensure t
+    :commands edit-server-start
+    :init (if after-init-time
+              (edit-server-start)
+            (add-hook 'after-init-hook
+                      #'(lambda() (edit-server-start))))
+    :config (setq edit-server-new-frame-alist
+                  '((name . "Edit with Emacs")
+                    (minibuffer . t)
+                    (menu-bar-lines . t)
+                    (window-system . x))))
+
+#+end_src
+
+** Reading
+
+Make reading stuff in Emacs easier.
+
+#+begin_src emacs-lisp :tangle yes
+  (defun reading-mode ()
+    "Enable a major mode and some minor modes useful for reading."
+    (interactive)
+    (fundamental-mode)
+    (text-scale-set 1)
+    (visual-line-mode 1)
+    (set-frame-font "Roboto")
+    (set-fill-column 65)
+    (set-justification-full (point-min) (point-max))
+    (set-left-margin (point-min) (point-max) 7)
+    (split-window-horizontally)
+    (follow-mode 1)
+    (read-only-mode 1))
+#+end_src
+
+** IDO
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package ido
+  :disabled t
+  :init
+  (setq ido-enable-flex-matching t)
+  (setq ido-everywhere t)
+  (ido-mode t)
+  (use-package ido-vertical-mode
+    :ensure t
+    :defer t
+    :init (ido-vertical-mode 1)
+    (setq ido-vertical-define-keys 'C-n-and-C-p-only)))
+#+END_SRC
+
+** Whitespace
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package whitespace
+  :ensure t )
+
+(setq whitespace-line-column 80) ;; limit line length
+(setq whitespace-style '(face tabs empty trailing lines-tail))
+(global-whitespace-mode)
+(diminish 'global-whitespace-mode)
+
+(defun cleanup-on-save ()
+  "Call `whitespace-cleanup' on save"
+  (whitespace-cleanup))
+
+(add-hook 'before-save-hook 'cleanup-on-save)
+#+END_SRC
+
+** Helm
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package helm
+  :ensure t
+  :diminish helm-mode
+  ;:bind (("C-c h" . helm-command-prefix))
+         ;("C-x b" . helm-mini)
+         ;("C-`" . helm-resume)
+         ;("M-x" . helm-M-x)
+         ;("C-x C-f" . helm-find-files)
+         ;("C-x C-r" . helm-recentf))
+  :init
+  (require 'helm-config)
+  :config
+  (setq helm-locate-command "mdfind -interpret -name %s %s"
+        helm-ff-newfile-prompt-p nil
+        helm-M-x-fuzzy-match t))
+(use-package helm-projectile
+  :ensure t
+  :after helm-mode
+  :commands helm-projectile
+  :bind ("C-c p h" . helm-projectile))
+(use-package helm-ag
+  :ensure t
+  :after helm-mode)
+(use-package helm-swoop
+  :ensure t
+  :after helm-mode
+  :bind ("C-S-s" . helm-swoop))
+#+END_SRC
+
+#+RESULTS:
+: helm-swoop
+
+** Ivy
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package ivy
+  :ensure t
+  :diminish (ivy-mode . "")
+  :bind
+  (:map ivy-mode-map
+        ("C-'" . ivy-avy))
+  :config
+  (ivy-mode 1)
+  ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
+  (setq ivy-use-virtual-buffers t)
+  ;; number of result lines to display
+  (setq ivy-height 10)
+  ;; Show candidate index and total count
+  (setq ivy-count-format "(%d/%d) ")
+  ;; no regexp by default
+  (setq ivy-initial-inputs-alist nil)
+  ;; configure regexp engine.
+  (setq ivy-re-builders-alist
+	;; allow input not in order
+        '((t   . ivy--regex-ignore-order))))
+(use-package avy :ensure t)
+(use-package counsel
+  :ensure t
+  :bind (("M-x" . counsel-M-x)
+         ("C-x C-r" . counsel-recentf)
+         ("C-c h i" . counsel-imenu)
+         ("C-h v" . counsel-describe-variable)
+         ("C-h f" . counsel-describe-function)))
+(use-package counsel-projectile
+  :ensure t
+  :config
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (counsel-projectile-mode)
+  (setq counsel-projectile-switch-project-action 'dired))
+(use-package swiper
+  :ensure t
+  :bind (("C-s" . swiper)))
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** Magit
+A great interface for git projects.
+It’s much more pleasant to use than the git interface
+on the command line. Use an easy keybinding to access magit.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package magit
+  :ensure t
+  :defer t
+  :bind (("C-c g" . magit-status)
+         ("C-c G" . magit-dispatch)
+         ("C-c m l" . magit-log-buffer-file)
+         ("C-c m b" . magit-blame))
+  :config
+  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
+  (setq magit-diff-refine-hunk t))
+#+END_SRC
+
+#+BEGIN_QUOTE
+
+    The following code makes magit-status run alone in the frame, and then restores the old window configuration when you quit out of magit.
+
+    No more juggling windows after commiting. It’s magit bliss.
+
+#+END_QUOTE
+
+From: [[http://whattheemacsd.com/setup-magit.el-01.html][Magnar Sveen]]
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; full screen magit-status
+(defadvice magit-status (around magit-fullscreen activate)
+  "Make Magit full screen and restore windows when done."
+  (window-configuration-to-register :magit-fullscreen)
+  ad-do-it
+  (delete-other-windows))
+
+(defun magit-quit-session ()
+  "Restore the previous window configuration and kill the magit buffer."
+  (interactive)
+  (kill-buffer)
+  (jump-to-register :magit-fullscreen))
+#+END_SRC
+
+Magit extension for GitHub/GitLab
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package forge
+  :ensure t
+  :after magit)
+#+END_SRC
+
+** Flycheck
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package flycheck
+  :ensure t
+  :diminish flycheck-mode
+  :defer 10
+  :init (global-flycheck-mode)
+  :config (setq flycheck-html-tidy-executable "tidy5"))
+#+END_SRC
+
+Enable flyspell
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package flyspell
+  :ensure t
+  :diminish flyspell-mode
+  :bind ("C->" . flyspell-correct-word-before-point)
+  )
+(setq ispell-program-name "aspell"
+        ispell-extra-args (listp "--sug-mode=ultra"))
+(flyspell-mode 1)
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** Lisp
+*** SLIME
+Install the [[https://melpa.org/#/slime][Superior Lisp Interaction Mode for Emacs]].
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package slime :ensure t)
+#+END_SRC
+
+Set the inferior Lisp program for SLIME to [[https://sourceforge.net/projects/sbcl/][sbcl]].
+#+begin_src emacs-lisp :tangle yes
+(setq inferior-lisp-program "sbcl")
+#+end_src
+
+Set up company for SLIME
+
+#+begin_src emacs-lisp :tangle yes
+(use-package slime-company :ensure t)
+(slime-setup '(slime-company))
+#+end_src
+
+
+
+
+
+*** Prelude
+Following lisp config mostly taken from [[https://github.com/bbatsov][bbatsov's]] [[https://github.com/bbatsov/prelude][Prelude]].
+
+#+begin_src emacs-lisp :tangle yes
+(use-package rainbow-delimiters :ensure t)
+
+(define-key read-expression-map (kbd "TAB") 'completion-at-point)
+
+;; wrap keybindings
+; (define-key lisp-mode-shared-map (kbd "M-(") (prelude-wrap-with "("))
+; (define-key lisp-mode-shared-map (kbd "M-\"") (prelude-wrap-with "\""))
+
+(defun prelude-lisp-coding-defaults ()
+  (smartparens-strict-mode +1)
+  (rainbow-delimiters-mode +1))
+
+(setq prelude-lisp-coding-hook 'prelude-lisp-coding-defaults)
+
+;; interactive modes don't need whitespace checks
+(defun prelude-interactive-lisp-coding-defaults ()
+  (smartparens-strict-mode +1)
+  (rainbow-delimiters-mode +1)
+  (whitespace-mode -1))
+
+(setq prelude-interactive-lisp-coding-hook
+      'prelude-interactive-lisp-coding-defaults)
+
+(add-hook 'lisp-mode-hook (lambda ()
+                                  (run-hooks 'prelude-lisp-coding-hook)))
+
+#+end_src
+
+** Emacs Lisp
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package macrostep
+    :ensure t
+    :bind (("H-`" . macrostep-expand)
+           ("H-C-`" . macrostep-collapse)))
+#+END_SRC
+
+
+
+*** Prelude
+Following emacs-lisp config mostly taken from [[https://github.com/bbatsov][bbatsov's]] [[https://github.com/bbatsov/prelude][Prelude]].
+
+#+begin_src emacs-lisp :tangle yes
+
+(use-package rainbow-mode :ensure t)
+(use-package crux :ensure t)
+;(use-package elisp-slime-nav :ensure t)
+
+(defun prelude-recompile-elc-on-save ()
+  "Recompile your elc when saving an elisp file."
+  (add-hook 'after-save-hook
+            (lambda ()
+              (when
+                     (file-exists-p (byte-compile-dest-file buffer-file-name))
+                (emacs-lisp-byte-compile)))
+            nil
+            t))
+
+(define-key emacs-lisp-mode-map (kbd "C-c C-c") 'eval-defun)
+(define-key emacs-lisp-mode-map (kbd "C-c C-b") 'eval-buffer)
+
+(defun prelude-conditional-emacs-lisp-checker ()
+  "Don't check doc style in Emacs Lisp test files."
+  (let ((file-name (buffer-file-name)))
+    (when (and file-name (string-match-p ".*-tests?\\.el\\'" file-name))
+      (setq-local flycheck-checkers '(emacs-lisp)))))
+
+
+(defun prelude-emacs-lisp-mode-defaults ()
+  "Sensible defaults for `emacs-lisp-mode'."
+  (run-hooks 'prelude-lisp-coding-hook)
+  (eldoc-mode +1)
+  (prelude-recompile-elc-on-save)
+  (rainbow-mode +1)
+  (setq mode-name "EL")
+  (prelude-conditional-emacs-lisp-checker))
+
+(setq prelude-emacs-lisp-mode-hook 'prelude-emacs-lisp-mode-defaults)
+
+(add-hook 'emacs-lisp-mode-hook (lambda ()
+                                  (run-hooks 'prelude-emacs-lisp-mode-hook)))
+
+;(with-eval-after-load "elisp-slime-nav"
+ ; (diminish 'elisp-slime-nav-mode))
+(with-eval-after-load "rainbow-mode"
+  (diminish 'rainbow-mode))
+(with-eval-after-load "eldoc"
+  (diminish 'eldoc-mode))
+
+;(add-hook 'emacs-lisp-mode-hook (lambda () (elisp-slime-nav-move 1)))
+
+(defun conditionally-enable-smartparens-mode ()
+  "Enable `smartparens-mode' in the minibuffer, during `eval-expression'."
+  (if (eq this-command 'eval-expression)
+      (smartparens-mode 1)))
+
+(add-hook 'minibuffer-setup-hook 'conditionally-enable-smartparens-mode)
+
+#+end_src
+
+** Projectile
+Project management and navigation.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package projectile
+  :ensure t
+  :diminish projectile-mode
+  :commands (projectile-mode projectile-switch-project)
+  :bind (("C-c p p" . projectile-switch-project)
+         ("C-c p s s" . projectile-ag)
+         ("C-c p s r" . projectile-ripgrep)))
+  (define-key projectile-mode-map
+    (kbd "C-c p") 'projectile-command-map)
+  (projectile-mode 1)
+  (setq projectile-enable-caching t)
+  (setq projectile-switch-project-action 'projectile-dired)
+#+END_SRC
+** Python
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package python-mode
+  :defer t
+  :ensure t)
+#+END_SRC
+** Company
+Auto completion
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package company
+    :ensure t
+    :config
+    (setq company-tooltip-limit 20)
+    (setq company-idle-delay .15)
+    (setq company-echo-delay 0)
+    (setq company-begin-commands '(self-insert-command))
+    (define-key company-active-map (kbd "C-n") #'company-select-next)
+    (define-key company-active-map (kbd "C-p") #'company-select-previous))
+#+END_SRC
+** Stumpwm
+
+#+begin_src emacs-lisp :tangle yes
+(use-package stumpwm-mode :ensure t)
+#+end_src
+
+Add a quick way for connecting to the Swank server started by StumpWM.
+
+#+begin_src emacs-lisp :tangle yes
+(defvar stumpwm-swank-host "localhost" "Swank host as set in your StumpWM config")
+(defvar stumpwm-swank-port 4004 "Swank port as set in your StumpWM config")
+(defun stumpwm-connect ()
+  (interactive)
+  (slime-connect stumpwm-swank-host stumpwm-swank-port)
+  )
+#+end_src
+
+** Nov
+
+Install [[https://melpa.org/#/nov][nov]] so I can read epub files in Emacs.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package nov :ensure t)
+#+END_SRC
+
+Enable nov-mode for epub files.
+
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+#+end_src
+
+Properly justify text.
+This requires [[https://github.com/Fuco1/justify-kp][justify-kp]] which is unfortunately not in MELPA,
+since it hasn't been updated since <2019-11-19>.
+It is still up on github though so we can do a quick clone.
+
+#+BEGIN_SRC bash
+cd "$HOME/.emacs.d/elpa/"
+git clone "https://github.com/Fuco1/justify-kp"
+#+END_SRC
+
+It should also be available as a git submodule of my .emacs.d repo
+
+#+begin_src emacs-lisp :tangle yes
+;(add-to-list 'load-path "~/.emacs.d/elpa/justify-kp/")
+;(require 'justify-kp)
+(use-local-package 'justify-kp)
+(setq nov-text-width t)
+
+(defun my-nov-window-configuration-change-hook ()
+  "Justify on nov window change."
+  (nov-justify-hook)
+  (remove-hook 'window-configuration-change-hook
+               'my-nov-window-configuration-change-hook
+               t))
+
+(defun nov-justify-hook ()
+  "Justify nov buffer."
+  (if (get-buffer-window)
+      (
+       let ((max-width (pj-line-width))
+            buffer-read-only)
+       (save-excursion
+         (goto-char (point-min))
+         (while (not (eobp))
+           (when (not (looking-at "^[[:space:]]*$"))
+             (goto-char (line-end-position))
+             (when (> (shr-pixel-column) max-width)
+               (goto-char (line-beginning-position))
+               (pj-justify)))
+           (forward-line 1)))
+       (toggle-word-wrap 1)
+       )
+    (add-hook 'window-configuration-change-hook
+              'my-nov-window-configuration-change-hook
+              nil t)))
+
+(add-hook 'nov-post-html-render-hook 'nov-justify-hook)
+
+#+end_src
+
+** Tramp
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package tramp
+    :ensure t
+    :config (setq tramp-default-method "ssh"))
+#+END_SRC
+
+** God Mode
+
+#+begin_src emacs-lisp :tangle yes
+(use-package god-mode
+  :ensure t)
+
+;(god-mode)
+(global-set-key (kbd "<escape>") #'god-local-mode)
+
+(defun my-god-mode-update-cursor ()
+  (setq cursor-type (if (or overwrite-mode (or god-local-mode buffer-read-only))
+                        'box
+                      'bar)))
+
+(add-hook 'god-mode-enabled-hook #'my-god-mode-update-cursor)
+(add-hook 'overwrite-mode-hook #'my-god-mode-update-cursor)
+(add-hook 'buffer-list-update-hook #'my-god-mode-update-cursor)
+(add-hook 'god-mode-disabled-hook #'my-god-mode-update-cursor)
+
+(define-key god-local-mode-map (kbd ".") #'repeat)
+(global-set-key (kbd "C-x C-1") #'delete-other-windows)
+(global-set-key (kbd "C-x C-2") #'split-window-below)
+(global-set-key (kbd "C-x C-3") #'split-window-right)
+(global-set-key (kbd "C-x C-0") #'delete-window)
+#+end_src
+
+Change color of mode line when in god-mode
+
+#+begin_src emacs-lisp :tangle yes
+
+(require 'ewal-doom-themes)
+
+(defun my-god-mode-update-modeline ()
+  "Update the mode line colors when in god-mode"
+  (let ((mode-line-fg-default (ewal-doom-themes-get-color 'background -3))
+        (mode-line-fg-god (ewal-doom-themes-get-color 'background -3))
+        (red (ewal-doom-themes-get-color 'red  5))
+        (blue (ewal-doom-themes-get-color 'blue 0)))
+    (cond
+     (god-local-mode
+      (progn
+        (set-face-background
+         'mode-line
+         (car (doom-lighten mode-line-fg-god 0.15)))
+        (set-face-background
+         'mode-line-inactive
+          (car (doom-darken mode-line-fg-default 0.1)))
+        (set-face-background
+         'cursor
+         (car red))))
+     (t (progn
+          (set-face-background
+           'mode-line
+           (car (doom-darken mode-line-fg-default 0.15)))
+          (set-face-background
+           'mode-line-inactive
+           (car (doom-darken mode-line-fg-default 0.1)))
+          (set-face-background
+           'cursor
+           (car blue)))))))
+
+(add-hook 'god-mode-enabled-hook #'my-god-mode-update-modeline)
+(add-hook 'buffer-list-update-hook #'my-god-mode-update-modeline)
+(add-hook 'god-mode-disabled-hook #'my-god-mode-update-modeline)
+#+end_src
+
+* Keybindings
+** Org-mode
+#+begin_src emacs-lisp :tangle yes
+(defun org-agenda-sync ()
+"Sync notes between emacs and android"
+(interactive)
+(async-shell-command "agendaSync"))
+
+(define-key org-mode-map (kbd "H-s") 'org-agenda-sync)
+#+end_src
+
+** C
+#+begin_src emacs-lisp :tangle yes
+  (define-key c-mode-map (kbd "C-c r") 'srefactor-refactor-at-point)
+#+end_src
+** C++
+#+begin_src emacs-lisp :tangle yes
+  (define-key c++-mode-map (kbd "C-c r") 'srefactor-refactor-at-point)
+#+end_src
+** Global
+#+begin_src emacs-lisp :tangle yes
+(global-set-key (kbd "C-d") 'crux-duplicate-current-line-or-region)
+
+(global-set-key (kbd "<delete>") 'delete-char)
+
+(global-set-key (kbd "C-x x") 'replace-regexp)
+(global-set-key (kbd "C-x c C-c") 'replace-string)
+
+(global-set-key (kbd "C-+") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
+
+(global-set-key (kbd "C-x O") (lambda ()
+                                (interactive)
+                                (other-window -1))) ;; back one
+(bind-key "C-k" 'crux-kill-whole-line)
+
+(bind-key "C-c c" 'org-capture)
+(bind-key "C-c a" 'org-agenda)
+
+(bind-key "C-." 'hippie-expand)
+
+(bind-key "M-y" 'helm-show-kill-ring)
+
+(bind-key "C-x b" 'counsel-switch-buffer)
+
+#+end_src
+
+#+RESULTS:
+: hippie-expand
+
+
+#+begin_src emacs-lisp :tangle yes
+(defcustom after-save-interactively-hook nil
+  "Normal hook that is run after a buffer is saved interactively to its file.
+See `run-hooks'."
+  :group 'files
+  :type 'hook)
+
+(defun save-buffer-and-call-interactive-hooks (&optional arg)
+  "Save the buffer and call hooks if called interactively.
+ARG is passed to 'save-buffer'"
+  (interactive "p")
+  (save-buffer arg)
+  (when (called-interactively-p 'all)  ;; run post-hooks only if called interactively
+    (run-hooks 'after-save-interactively-hook)))
+
+(global-set-key (kbd "C-x s") 'save-buffer-and-call-interactive-hooks)
+#+end_src
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package expand-region
+  :ensure t
+  :bind ("C-=" . er/expand-region))
+#+END_SRC
+
+* User Interface
+
+I do enjoy myself a good looking user interface.
+In fact customization of graphical elements is one of the reason
+I use Emacs.
+
+** Unicode
+Enable unicode fonts using the suprisingly named package [[https://melpa.org/#/unicode-fonts][unicode-fonts]]
+
+This does require that some Unicode fonts exists.
+
+#+BEGIN_SRC bash
+yay -S ttf-symbola quivira ttf-dejavu noto-fonts noto-fonts-emoji noto-fonts-extra
+#+END_SRC
+
+Setting up this package for the first time may take upwards of 5 minutes
+the first time you start Emacs. There is a lot of unicode characters.
+
+#+begin_src emacs-lisp :tangle yes
+(use-package unicode-fonts
+  :ensure t
+  :init (unicode-fonts-setup))
+#+end_src
+
+** Themes
+*** Pywal
+Currently I use [[https://github.com/dylanaraps/pywal][pywal]] to dynamically
+generate a colour scheme on the fly from my current background, which I
+change automatically every 5 minutes
+
+Ideally I would apply that colour scheme to my Emacs theme as well.
+*** ewal
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package ewal
+  :ensure t
+  :init (setq ewal-use-built-in-always-p nil
+              ewal-use-built-in-on-failure-p t
+              ewal-json-file "~/.cache/wal/colors.json"
+              ewal-built-in-palette "sexy-material"))
+#+END_SRC
+
+#+RESULTS:
+
+
+Thankfully [[https://melpa.org/#/ewal][ewal]] exist so I can just
+use that.
+
+Now we need a theme that knows how to apply the scheme colours.
+[[https://melpa.org/#/ewal-doom-themes][ewal-doom-themes]] looks pretty nice.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package ewal-doom-themes :ensure t)
+
+(load-theme 'ewal-doom-one t)
+(enable-theme 'ewal-doom-one)
+#+END_SRC
+
+#+RESULTS:
+
+We do need to configure some things so that the ewal theme is reapplied
+every time the background changes, since apparently that is not a common
+circumstance.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+
+(defun refresh-theme ()
+  "Reload the theme."
+    (load-theme 'ewal-doom-one t)
+    (run-hooks 'buffer-list-update-hook))
+
+(defun theme-callback (event)
+  "Callback for refreshing the theme.  Parameter EVENT is ignored."
+  (refresh-theme))
+
+(use-package filenotify :ensure t)
+(file-notify-add-watch
+ "~/.cache/wal/colors.json" '(change) 'theme-callback)
+
+(enable-theme 'ewal-doom-one)
+#+END_SRC
+
+#+RESULTS:
+
+
+# It may be needed to remove the background color
+# from emacs when run from terminal
+# (defun remove-bg-color ()  "Don't show bg color in terminal."
+#       (unless (display-graphic-p (selected-frame))
+#         (set-face-background 'default "unspecified-bg" (selected-frame)) ))
+# (add-hook 'window-setup-hook 'remove-bg-color)
+
+*** Safe themes
+Mark all themes as safe for simplicity.
+#+begin_src emacs-lisp :tangle yes
+(setq custom-safe-themes t)
+#+end_src
+
+** Org Appearance
+
+Org mode is something I use quite often (case in point)
+so I would prefer it would look fairly decent.
+
+#+begin_src emacs-lisp :tangle yes
+        (setq org-fontify-done-headline t
+              org-fontify-whole-heading-line t
+              org-src-fontify-natively t
+              org-src-window-setup 'current-window
+              org-src-strip-leading-and-trailing-blank-lines t
+              org-src-preserve-indentation t)
+
+#+end_src
+
+I set headlines to fontify the whole line
+as well as change the face when marked DONE.
+Also fontify code blocks.
+
+*Obviously* we /want/ to =display= emphasis markers as what they _do_
+rather than some +random characters+.
+
+#+begin_src emacs-lisp :tangle yes
+  (setq org-hide-emphasis-markers t)
+#+end_src
+
+And we want some fancy UTF8 characters for entries
+#+begin_src emacs-lisp :tangle yes
+  (setq org-pretty-entities t)
+#+end_src
+
+Since I write in $\LaTeX$ a lot I would prefer if $\LaTeX$ things
+were being highlighted.
+
+#+begin_src emacs-lisp :tangle yes
+  (setq org-highlight-latex-and-related (quote (native script entities)))
+#+end_src
+
+Finally replace the default ... when a heading is collapsed
+with a fancy unicode arrow ↘
+
+#+begin_src emacs-lisp :tangle yes
+(setq org-ellipsis "↘")
+#+end_src
+
+** Icons
+
+Enable icons in various buffers with [[https://melpa.org/#/all-the-icons][all-the-icons]].
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package all-the-icons
+    :ensure t)
+
+  (use-package all-the-icons-ibuffer
+    :ensure t
+    :init (all-the-icons-ibuffer-mode 1))
+
+  (use-package all-the-icons-gnus
+    :ensure t
+    :init (all-the-icons-gnus-setup))
+
+  (use-package all-the-icons-dired
+    :ensure t
+    :init (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
+
+  (use-package all-the-icons-ivy
+    :ensure t
+    :init (all-the-icons-ivy-setup))
+#+end_src
+
+** Font Ligatures
+
+Font ligatures sure are nice.
+
+I happen to know that the [[https://github.com/tonsky/FiraCode][Fira Code]] ones are doubly so.
+
+First we need to set the default font to Fire Code.
+
+That requires that it is installed on the system of course.
+
+Thankfully I happen to know that a nice Fira Code package exists in the [[https://aur.archlinux.org/packages/otf-fira-code-symbol/][AUR]].
+
+#+BEGIN_SRC bash
+  yay -S "otf-fira-code-symbol" "ttf-fira-code"
+#+END_SRC
+
+We also need to set the Fira Code as the actual font for emacs.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (add-to-list 'default-frame-alist
+	       (cond
+		((string-equal system-type "gnu/linux") '(font . "Fira Code-12"))))
+#+END_SRC
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package fira-code-mode
+      :ensure t
+      :init (define-globalized-minor-mode global-fira-code-mode fira-code-mode
+    (lambda () (fira-code-mode 1))))
+#+end_src
+
+Make a global minor mode for Fira code font ligatures.
+
+** Modeline
+
+Enable [[https://melpa.org/#/doom-modeline][doom-modeline]].
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package doom-modeline
+    :ensure t
+    :init (doom-modeline-mode 1))
+#+end_src
+
+Enable icons in the modeline
+
+#+begin_src emacs-lisp :tangle yes
+  (setq doom-modeline-icon t)
+#+end_src
+
+Don't show time in the Emacs modeline.
+I have the Stumpwm modeline for that.
+
+#+begin_src emacs-lisp :tangle yes
+  (display-time-mode 0)
+#+end_src
+
+#+RESULTS:
+
+Diplay the column number in the modeline
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(line-number-mode t)
+(column-number-mode t)
+(size-indication-mode t)
+#+END_SRC
+
+
+The following function for occur-dwim is taken from
+[[https://github.com/abo-abo][Oleh Krehel]] from his
+[[http://oremacs.com/2015/01/26/occur-dwim/][blog post at (or emacs]]. It takes
+the current region or the symbol at point
+as the default value for occur.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(defun occur-dwim ()
+  "Call `occur' with a sane default."
+  (interactive)
+  (push (if (region-active-p)
+            (buffer-substring-no-properties
+             (region-beginning)
+             (region-end))
+          (thing-at-point 'symbol))
+        regexp-history)
+  (call-interactively 'occur))
+
+(bind-key "M-s o" 'occur-dwim)
+#+END_SRC
+
+Make page breaks pretty instead of ~^L~.
+See also this [[http://ericjmritz.name/2015/08/29/using-page-breaks-in-gnu-emacs/][article]].
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package page-break-lines :ensure t)
+#+END_SRC
+
+** Ibuffer
+Use Ibuffer by default.
+#+BEGIN_SRC emacs-lisp :tangle yes
+(defalias 'list-buffers 'ibuffer)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (add-hook 'dired-mode-hook 'auto-revert-mode)
+
+  ;; Also auto refresh dired, but be quiet about it
+  (setq global-auto-revert-non-file-buffers t)
+  (setq auto-revert-verbose nil)
+#+END_SRC
+
+Save recent files.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package recentf
+    :config
+    (recentf-mode t)
+    (setq recentf-max-saved-items 500))
+#+END_SRC
+
+** Misc
+
+Disable fringes.
+
+#+begin_src emacs-lisp :tangle yes
+  (fringe-mode 0)
+#+end_src
+
+Disable the blinking cursor.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(blink-cursor-mode -1)
+#+END_SRC
+
+Show matching parenthesis.
+
+#+begin_src emacs-lisp :tangle yes
+  (show-paren-mode t)
+#+end_src
+
+Wrap lines properly
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(global-visual-line-mode)
+(diminish 'visual-line-mode)
+#+END_SRC
+
+Smooth scrolling
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package smooth-scrolling  :ensure t)
+(smooth-scrolling-mode)
+#+END_SRC
+
+Use bar cursor
+
+#+begin_src emacs-lisp :tangle yes
+(use-package bar-cursor :ensure t)
+(bar-cursor-mode 1)
+(diminish 'bar-cursor-mode)
+#+end_src
+* Footer
+#+begin_src emacs-lisp :tangle yes
+(provide 'config)
+;;; config.el ends here
+#+end_src

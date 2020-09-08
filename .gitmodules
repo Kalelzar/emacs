@@ -1,0 +1,6 @@
+[submodule "elpa/justify-kp"]
+	path = elpa/justify-kp
+	url = https://github.com/Fuco1/justify-kp.git
+[submodule "elpa/org-link-beautify"]
+	path = elpa/org-link-beautify
+	url = https://github.com/stardiviner/org-link-beautify
