@@ -12,16 +12,16 @@
 
 ;;; Code:
 
-(defun --init-message (str) (message (concat "[config] " str)))
 
-(--init-message "Initializing in config.org")
+
+
 #+END_SRC
 
 
 
 * Personal Information
 #+BEGIN_SRC emacs-lisp :tangle yes
-(--init-message "Setting personal information")
+
 (setq user-full-name "Borislav Atanasov"
       user-mail-address "natomanofglory@gmail.com")
 #+END_SRC
@@ -30,11 +30,11 @@
 Set the cusomize file to a separate file.
 
 #+BEGIN_SRC emacs-lisp :tangle yes
-(--init-message (concat "Set custom file to " (prin1-to-string (expand-file-name "custom.el" user-emacs-directory))))
+
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-(--init-message "Loading custom file...")
+
 (load custom-file)
-(--init-message "Loading custom file... Done")
+
 #+END_SRC
 
 Set up [[https://melpa.org/#/lsp-mode][Language Server Protocol]]
@@ -548,7 +548,7 @@ Set the default notes file.
 
 #+BEGIN_SRC emacs-lisp :tangle yes
 (setq org-default-notes-file "~/Documents/notes.org")
-(--init-message (concat "Set default notes file to: " org-default-notes-file))
+
 #+END_SRC
 
 Enable speed commands.
@@ -569,7 +569,6 @@ Enable windmove/framemove in org-mode.
 (add-hook 'org-shiftleft-final-hook 'windmove-left)
 (add-hook 'org-shiftdown-final-hook 'windmove-down)
 (add-hook 'org-shiftright-final-hook 'windmove-right)
-(--init-message "Enabled windmove in org-mode.")
 #+end_src
 
 Make latex previews in org-mode twice as big.
