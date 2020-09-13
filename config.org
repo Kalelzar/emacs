@@ -25,6 +25,7 @@
 (setq user-full-name "Borislav Atanasov"
       user-mail-address "natomanofglory@gmail.com")
 #+END_SRC
+
 * Misc
 
 Set the cusomize file to a separate file.
@@ -37,73 +38,8 @@ Set the cusomize file to a separate file.
 
 #+END_SRC
 
-Set up [[https://melpa.org/#/lsp-mode][Language Server Protocol]]
-
-#+BEGIN_SRC emacs-lisp :tangle yes
-(use-package lsp-mode :commands lsp)
-(use-package lsp-ui :commands lsp-ui-mode)
-(use-package company-lsp :commands company-lsp)
-#+END_SRC
-
-Kill. Whole. Lines. This should be the default.
-
-#+begin_src emacs-lisp :tangle yes
-(setq kill-whole-line t)
-#+end_src
-
-I don't actually know what this does but the EmacsWiki told me to
-put it in.
-
-#+begin_src emacs-lisp :tangle yes
-(autoload 'wl "wl" "Wanderlust" t)
-#+end_src
-
-Watch my [[https://melpa.org/#/activity-watch-mode][emacs activity]] with [[https://github.com/ActivityWatch/activitywatch/][ActivityWatch]]
-
-#+begin_src emacs-lisp :tangle yes
-(when (executable-find "aw-server")
-  (use-package activity-watch-mode
-    )
-  (global-activity-watch-mode)
-  (diminish 'activity-watch-mode))
-#+end_src
-
-Global semantic mode for my programming needs.
-#+begin_src emacs-lisp :tangle yes
-(semantic-mode 1)
-(diminish 'semantic-mode)
-#+end_src
-
-Set [[https://github.com/pwmt/zathura][zathura]] as the default pdf viewer
-
-#+BEGIN_SRC bash
-sudo pacman -S zathura zathura-pdf-mupdf
-#+END_SRC
-
-#+begin_src emacs-lisp :tangle yes
-(with-eval-after-load 'tex
-  (require 'tex)
-  (add-to-list 'TeX-view-program-selection
-               '(output-pdf "Zathura")))
-#+end_src
-
-More convenient ~*scratch*~ buffers
-
-#+BEGIN_SRC emacs-lisp :tangle yes
-(use-package scratch
-
-  :commands scratch)
-#+END_SRC
-
-Undo trees
-
-#+BEGIN_SRC emacs-lisp :tangle yes
-(use-package undo-tree
-  )
-(global-undo-tree-mode)
-(diminish 'undo-tree-mode)
-#+END_SRC
-
+#+RESULTS:
+: t
 
 Allow installations from packages from github
 
@@ -119,6 +55,101 @@ Allow installations from packages from github
                                (require package)
                                )
 #+end_src
+
+#+RESULTS:
+: use-local-package
+
+
+
+Set up [[https://melpa.org/#/lsp-mode][Language Server Protocol]]
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package lsp-mode :commands lsp)
+(use-package lsp-ui :commands lsp-ui-mode)
+(use-package company-lsp :commands company-lsp)
+#+END_SRC
+
+#+RESULTS:
+
+Kill. Whole. Lines. This should be the default.
+
+#+begin_src emacs-lisp :tangle yes
+(setq kill-whole-line t)
+#+end_src
+
+#+RESULTS:
+: t
+
+I don't actually know what this does but the EmacsWiki told me to
+put it in.
+
+#+begin_src emacs-lisp :tangle yes
+(autoload 'wl "wl" "Wanderlust" t)
+#+end_src
+
+#+RESULTS:
+: wl
+
+Watch my [[https://melpa.org/#/activity-watch-mode][emacs activity]] with [[https://github.com/ActivityWatch/activitywatch/][ActivityWatch]]
+
+#+begin_src emacs-lisp :tangle yes
+(when (executable-find "aw-server")
+  (use-package activity-watch-mode
+    )
+  (global-activity-watch-mode)
+  (diminish 'activity-watch-mode))
+#+end_src
+
+#+RESULTS:
+
+Global semantic mode for my programming needs.
+#+begin_src emacs-lisp :tangle yes
+(semantic-mode 1)
+(diminish 'semantic-mode)
+#+end_src
+
+#+RESULTS:
+
+Set [[https://github.com/pwmt/zathura][zathura]] as the default pdf viewer
+
+#+BEGIN_SRC bash
+sudo pacman -S zathura zathura-pdf-mupdf
+#+END_SRC
+
+#+begin_src emacs-lisp :tangle yes
+(with-eval-after-load 'tex
+  (require 'tex)
+  (add-to-list 'TeX-view-program-selection
+               '(output-pdf "Zathura")))
+#+end_src
+
+#+RESULTS:
+
+More convenient ~*scratch*~ buffers
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package scratch
+
+  :commands scratch)
+#+END_SRC
+
+#+RESULTS:
+
+Undo trees
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+
+(use-package undo-tree
+:quelpa (undo-tree :fetcher url
+                   :url "http://git.savannah.gnu.org/cgit/emacs/elpa.git/plain/packages/undo-tree/undo-tree.el"))
+(global-undo-tree-mode)
+(diminish 'undo-tree-mode)
+#+END_SRC
+
+#+RESULTS:
+|   |
+
+
 
 Crux
 
@@ -387,34 +418,43 @@ Silence!
 #+END_SRC
 
 * Modes
-** Yasnippet
-
-
-Enable Yasnippets.
-
+** Flycheck
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package yasnippet
+(use-package flycheck
 
-    :diminish yas-minor-mode)
-    ;(add-to-list yas-snippet-dirs (concat user-emacs-directory "snippets"))
-    (setq yas-indent-line 'fixed)
-    (yas-global-mode)
+  :diminish flycheck-mode
+  :defer 10
+  :commands global-flycheck-mode
+  :init (global-flycheck-mode)
+  :config (setq flycheck-html-tidy-executable "tidy5"))
 #+END_SRC
 
-We do however still need some snippets.
+Enable flyspell
 
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package common-lisp-snippets )
-(use-package yasnippet-snippets )
+  (use-package flyspell
+
+    :diminish flyspell-mode
+    :bind ("C->" . flyspell-correct-word-before-point)
+    )
+  (when (executable-find "aspell")
+     (setq ispell-program-name "aspell"
+          ispell-extra-args (listp "--sug-mode=ultra"))
+     (flyspell-mode 1))
+
 #+END_SRC
 
 #+RESULTS:
+: t
+
 ** Org
 
 Fetch the latest version of org mode as per [[http://orgmode.org/elpa.html][this instructions]].
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package org :ensure org-plus-contrib)
 #+END_SRC
+
+#+RESULTS:
 
 *** Babel
 
@@ -424,6 +464,8 @@ It's annoying.
 #+begin_src emacs-lisp :tangle yes
   (setq org-confirm-babel-evaluate nil)
 #+end_src
+
+#+RESULTS:
 
 Enable some languages for evaluation in Org code blocks.
 
@@ -528,8 +570,9 @@ when /in/ org-mode.
 #+begin_src emacs-lisp :tangle yes
     (use-package org-superstar )
     ;(use-package org-sticky-header )
-(use-package tex-mode
-  :ensure auctex)
+    (setq use-package-ensure-function 'use-package-ensure-elpa)
+    (use-package tex-site :ensure auctex)
+    (setq use-package-ensure-function 'quelpa)
     (use-package cdlatex )
 
     (defun org-mode-enable-minor-modes-hook ()
@@ -1078,34 +1121,28 @@ Magit extension for GitHub/GitLab
   :after magit)
 #+END_SRC
 
-** Flycheck
-#+BEGIN_SRC emacs-lisp :tangle yes
-(use-package flycheck
+** Yasnippet
 
-  :diminish flycheck-mode
-  :defer 10
-  :init (global-flycheck-mode)
-  :config (setq flycheck-html-tidy-executable "tidy5"))
+
+Enable Yasnippets.
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package yasnippet
+
+    :diminish yas-minor-mode)
+    ;(add-to-list yas-snippet-dirs (concat user-emacs-directory "snippets"))
+    (setq yas-indent-line 'fixed)
+    (yas-global-mode)
 #+END_SRC
 
-Enable flyspell
+We do however still need some snippets.
 
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package flyspell
-
-    :diminish flyspell-mode
-    :bind ("C->" . flyspell-correct-word-before-point)
-    )
-  (when (executable-find "aspell")
-     (setq ispell-program-name "aspell"
-          ispell-extra-args (listp "--sug-mode=ultra"))
-     (flyspell-mode 1))
-
+(use-package common-lisp-snippets )
+(use-package yasnippet-snippets )
 #+END_SRC
 
 #+RESULTS:
-: t
-
 ** Lisp
 *** SLIME
 Install the [[https://melpa.org/#/slime][Superior Lisp Interaction Mode for Emacs]].
@@ -1177,60 +1214,59 @@ Following lisp config mostly taken from [[https://github.com/bbatsov][bbatsov's]
 Following emacs-lisp config mostly taken from [[https://github.com/bbatsov][bbatsov's]] [[https://github.com/bbatsov/prelude][Prelude]].
 
 #+begin_src emacs-lisp :tangle yes
+  (use-package rainbow-mode)
+  (use-package crux)
+  ;(use-package elisp-slime-nav )
 
-(use-package rainbow-mode )
-(use-package crux )
-;(use-package elisp-slime-nav )
+  (defun prelude-recompile-elc-on-save ()
+    "Recompile your elc when saving an elisp file."
+    (add-hook 'after-save-hook
+              (lambda ()
+                (when
+                       (file-exists-p (byte-compile-dest-file buffer-file-name))
+                  (emacs-lisp-byte-compile)))
+              nil
+              t))
 
-(defun prelude-recompile-elc-on-save ()
-  "Recompile your elc when saving an elisp file."
-  (add-hook 'after-save-hook
-            (lambda ()
-              (when
-                     (file-exists-p (byte-compile-dest-file buffer-file-name))
-                (emacs-lisp-byte-compile)))
-            nil
-            t))
+  (define-key emacs-lisp-mode-map (kbd "C-c C-c") 'eval-defun)
+  (define-key emacs-lisp-mode-map (kbd "C-c C-b") 'eval-buffer)
 
-(define-key emacs-lisp-mode-map (kbd "C-c C-c") 'eval-defun)
-(define-key emacs-lisp-mode-map (kbd "C-c C-b") 'eval-buffer)
-
-(defun prelude-conditional-emacs-lisp-checker ()
-  "Don't check doc style in Emacs Lisp test files."
-  (let ((file-name (buffer-file-name)))
-    (when (and file-name (string-match-p ".*-tests?\\.el\\'" file-name))
-      (setq-local flycheck-checkers '(emacs-lisp)))))
+  (defun prelude-conditional-emacs-lisp-checker ()
+    "Don't check doc style in Emacs Lisp test files."
+    (let ((file-name (buffer-file-name)))
+      (when (and file-name (string-match-p ".*-tests?\\.el\\'" file-name))
+        (setq-local flycheck-checkers '(emacs-lisp)))))
 
 
-(defun prelude-emacs-lisp-mode-defaults ()
-  "Sensible defaults for `emacs-lisp-mode'."
-  (run-hooks 'prelude-lisp-coding-hook)
-  (eldoc-mode +1)
-  (prelude-recompile-elc-on-save)
-  (rainbow-mode +1)
-  (setq mode-name "EL")
-  (prelude-conditional-emacs-lisp-checker))
+  (defun prelude-emacs-lisp-mode-defaults ()
+    "Sensible defaults for `emacs-lisp-mode'."
+    (run-hooks 'prelude-lisp-coding-hook)
+    (eldoc-mode +1)
+    (prelude-recompile-elc-on-save)
+    (rainbow-mode +1)
+    (setq mode-name "EL")
+    (prelude-conditional-emacs-lisp-checker))
 
-(setq prelude-emacs-lisp-mode-hook 'prelude-emacs-lisp-mode-defaults)
+  (setq prelude-emacs-lisp-mode-hook 'prelude-emacs-lisp-mode-defaults)
 
-(add-hook 'emacs-lisp-mode-hook (lambda ()
-                                  (run-hooks 'prelude-emacs-lisp-mode-hook)))
+  (add-hook 'emacs-lisp-mode-hook (lambda ()
+                                    (run-hooks 'prelude-emacs-lisp-mode-hook)))
 
-;(with-eval-after-load "elisp-slime-nav"
- ; (diminish 'elisp-slime-nav-mode))
-(with-eval-after-load "rainbow-mode"
-  (diminish 'rainbow-mode))
-(with-eval-after-load "eldoc"
-  (diminish 'eldoc-mode))
+  ;(with-eval-after-load "elisp-slime-nav"
+   ; (diminish 'elisp-slime-nav-mode))
+  (with-eval-after-load "rainbow-mode"
+    (diminish 'rainbow-mode))
+  (with-eval-after-load "eldoc"
+    (diminish 'eldoc-mode))
 
-;(add-hook 'emacs-lisp-mode-hook (lambda () (elisp-slime-nav-move 1)))
+  ;(add-hook 'emacs-lisp-mode-hook (lambda () (elisp-slime-nav-move 1)))
 
-(defun conditionally-enable-smartparens-mode ()
-  "Enable `smartparens-mode' in the minibuffer, during `eval-expression'."
-  (if (eq this-command 'eval-expression)
-      (smartparens-mode 1)))
+  (defun conditionally-enable-smartparens-mode ()
+    "Enable `smartparens-mode' in the minibuffer, during `eval-expression'."
+    (if (eq this-command 'eval-expression)
+        (smartparens-mode 1)))
 
-(add-hook 'minibuffer-setup-hook 'conditionally-enable-smartparens-mode)
+  (add-hook 'minibuffer-setup-hook 'conditionally-enable-smartparens-mode)
 
 #+end_src
 
@@ -1253,9 +1289,9 @@ Project management and navigation.
 #+END_SRC
 ** Python
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package python-mode
-  :defer t
-  )
+  (use-package python-mode
+    :defer t
+    )
 #+END_SRC
 ** Company
 Auto completion
@@ -1293,7 +1329,9 @@ Add a quick way for connecting to the Swank server started by StumpWM.
 Install [[https://melpa.org/#/nov][nov]] so I can read epub files in Emacs.
 
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package nov )
+  (setq use-package-ensure-function 'use-package-ensure-elpa)
+  (use-package nov)
+  (setq use-package-ensure-function 'quelpa)
 #+END_SRC
 
 Enable nov-mode for epub files.
