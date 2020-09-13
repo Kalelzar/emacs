@@ -32,10 +32,20 @@
   (package-install 'use-package)
   (package-install 'diminish))
 
+(unless (package-installed-p 'quelpa)
+    (with-temp-buffer
+      (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
+      (eval-buffer)
+      (quelpa-self-upgrade)))
+
 ;; From use-package README
 (eval-when-compile
   (require 'use-package))
 (use-package diminish :ensure t)
+
+(setq use-package-ensure-function 'quelpa)
+(setq use-package-always-ensure t)
+
 (require 'bind-key)
 
 ;;; Load the config
