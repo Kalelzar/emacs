@@ -1214,7 +1214,10 @@ Following lisp config mostly taken from [[https://github.com/bbatsov][bbatsov's]
 Following emacs-lisp config mostly taken from [[https://github.com/bbatsov][bbatsov's]] [[https://github.com/bbatsov/prelude][Prelude]].
 
 #+begin_src emacs-lisp :tangle yes
+
+  (setq use-package-ensure-function 'use-package-ensure-elpa)
   (use-package rainbow-mode)
+  (setq use-package-ensure-function 'quelpa)
   (use-package crux)
   ;(use-package elisp-slime-nav )
 
