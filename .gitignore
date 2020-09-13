@@ -34,3 +34,5 @@ config.el
 config.tex
 _minted*
 .lsp-session*
+server
+quelpa
