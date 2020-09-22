@@ -474,7 +474,8 @@ Enable some languages for evaluation in Org code blocks.
    'org-babel-load-languages
    '((python . t)
      (C . t)
-     (shell . t)))
+     (shell . t)
+     (lisp . t)))
 #+end_src
 
 *** Export
@@ -529,6 +530,7 @@ Enable Org Tempo mode for template expansion
 Source blocks
 #+BEGIN_SRC emacs-lisp :tangle yes
   (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("ll" . "src lisp"))
   (add-to-list 'org-structure-template-alist '("py" . "src python"))
   (add-to-list 'org-structure-template-alist '("sh" . "src sh"))
   (add-to-list 'org-structure-template-alist '("bh" . "src bash"))
@@ -1835,6 +1837,109 @@ Save recent files.
     (recentf-mode t)
     (setq recentf-max-saved-items 500))
 #+END_SRC
+
+** Splash
+Lately I've felt like opening =*scratch*= when I start Emacs
+is sort of a waste.
+
+I use =*scratch*= sparingly so having some kind of hub thingy instead
+could be more useful.
+
+
+So I want to implement one.
+
+I don't have any idea what might be useful there so let's just wing it.
+
+
+Having some recently visited files might be nice.
+
+So firstly let's write a function to get the last N visited files.
+I use =recentf= to keep track of that usually so we can probably get the
+information from there.
+
+#+begin_src emacs-lisp :tangle yes
+(defun last-visited (&optional count)
+  "Find last COUNT visited items."
+  (cl-loop for n
+         from 0
+         below (or count 10)
+         collect (nth n recentf-list))
+  )
+#+end_src
+
+There has to be an emacs lisp function to get the first N elements of a list
+that I can't find. This will do until I figure it out.
+
+
+Maybe being able to see my last active repos could be fine.
+
+I don't think =magit= stores your last active repos so we can just approximate
+with the function above
+
+#+begin_src emacs-lisp :tangle yes
+
+(defun last-repos-dir (&optional count)
+  "Find last active repositories, checking the last COUNT files visited."
+  (remove-duplicates
+   (flatten-list
+    (remove-if #'null
+               (mapcar #'magit-toplevel
+                       (last-visited (or count 30)))))
+   :test #'string=))
+
+#+end_src
+
+This however returns the /local (or remote really)/ path where the repo is
+cloned.
+
+
+
+#+begin_src emacs-lisp :tangle yes
+
+(defmacro magit-with-repository (repo &rest body)
+  "Evaluate BODY as if REPO was the currently active directory."
+  `(let ((default-directory ,repo))
+     ,@body
+     ))
+
+(defun repo-origin (repo)
+  "Return the origin remote of REPO."
+  (magit-with-repository repo
+                         (magit-get "remote.origin.url"))
+  )
+
+(defun last-repos (&optional count)
+  (mapcar #'repo-origin (last-repos-dir count))
+)
+#+end_src
+
+Let's see if it gets it right.
+
+#+begin_src emacs-lisp :tangle no :results none
+(mapcar #'(lambda (repo) (concat repo "\n"))
+        (last-repos 1))
+#+end_src
+
+#+RESULTS:
+| https://github.com/Kalelzar/emacs.git |
+
+\*looks up to address bar\*
+
+Seems right to me.
+
+
+What else... What else...
+
+Latest commits?
+
+Sure let's go with that.
+
+#+begin_src emacs-lisp :tangle no
+(defun latest-commits ()
+
+)
+#+end_src
+
 
 ** Misc
 
