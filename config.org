@@ -523,8 +523,7 @@ Enable some good minor modes for working with org-mode
 when /in/ org-mode.
 
 #+begin_src emacs-lisp :tangle yes
-    (use-package org-superstar
-      :hook org-mode)
+    (use-package org-superstar)
     ;(use-package org-sticky-header )
     (setq use-package-ensure-function 'use-package-ensure-elpa)
     (use-package tex-site :ensure auctex)
@@ -594,7 +593,7 @@ Add custom TODO keywords
 #+begin_src emacs-lisp :tangle yes
 
 (setq org-todo-keywords
-  '((sequence "NEW(n!)" "SCHEDULED(s!)" "IMMINENT(i!)" "ACTIVE(a!)" "|" "DONE(d!)" "CANCELLED(c!)")
+  '((sequence "INACTIVE(i!)" "SCHEDULED(s!)" "NEXT(n!)" "ACTIVE(a!)" "|" "DONE(d!)" "CANCELLED(c!)")
     (sequence "SUSPENDED(p!)")
     (sequence "EXPORT(e)" "|" "EXPORTED")))
 #+end_src
@@ -603,9 +602,9 @@ Set custom faces for TODO keywords.
 
 #+begin_src emacs-lisp :tangle yes
 (setq org-todo-keyword-faces
-  '(("NEW" . "#004488" )
+  '(("INACTIVE" . "#004488" )
     ("SCHEDULED" . "#aa6600")
-    ("IMMINENT" . "#006622")
+    ("NEXT" . "#006622")
     ("ACTIVE" . (:background "#004400" :foreground "white" :weight bold ))
     ("SUSPENDED" . (:background "#440000" :foreground "white" :weight bold ))
     ("DONE" . (:foreground "#204420" :weight bold))
@@ -621,77 +620,10 @@ At this point this really needs to be it's own file
 
 #+begin_src emacs-lisp :tangle yes
 
-(defvar kaltask-active-task nil
-  "Stores the current active task.")
+(use-package kaltask
+  :quelpa (kaltask :fetcher file
+                    :path "~/Code/Projects/kaltask"))
 
-(defvar kaltask-task-file "~/.cache/activeTask"
-  "File were the current `kaltask-active-task' is stored.")
-(defvar kaltask-task-file-length-limited-suffix "Long"
-  "The suffix of the file created if `kaltask-limit-task-length-in-file' is non-nil.")
-(defvar kaltask-limit-task-length-in-file 30
-  "If an int limit the length of the task name in `kaltask-task-file' to it.
-In such a case a file containing the unaltered task name will be created
-with the suffix `kaltask-task-file-length-limited-suffix' in the same directory.")
-
-(defun kaltask-active-task-p ()
-  "Check if `kaltask-active-task' is set."
-  (not (null kaltask-active-task)))
-
-(defun kaltask-get-active-task ()
-  "Return the value of `kal-active-task' if non-nil, and 'None' otherwise."
-  (if (kaltask-active-task-p)
-      kaltask-active-task
-    "None"))
-
-(defun kaltask-update-task-file ()
-  "Update the `kaltask-task-file' to match the current state of `kaltask-active-task'."
-  (with-temp-file kaltask-task-file
-    (let ((task (if (integerp kaltask-limit-task-length-in-file)
-                    (substring (kaltask-get-active-task)
-                               0
-                               (min kaltask-limit-task-length-in-file
-                                    (length (kaltask-get-active-task))))
-                    (kaltask-get-active-task))))
-      (delete-region (buffer-end -1)
-                     (buffer-end 1))
-      (insert task
-              (if (< kaltask-limit-task-length-in-file
-                     (length (kaltask-get-active-task)))
-                  "..."
-                  ""))))
-
-  (when (integerp kaltask-limit-task-length-in-file)
-    (with-temp-file (concat kaltask-task-file
-                            kaltask-task-file-length-limited-suffix)
-      (delete-region (buffer-end -1)
-                     (buffer-end 1))
-      (insert (kaltask-get-active-task)))))
-
-(defun kaltask-set-active-task (task)
-  "Set the active TASK to any non-nil string.
-This doesn't necessarily need to be a `org-mode' headline."
-  (if (and (kaltask-active-task-p) (not (null task)))
-       (error "There already is an active task")
-     (progn
-       (setq kaltask-active-task task)
-       (kaltask-update-task-file))))
-
-(defun kaltask-enforce-single-active ()
-  "Enforce sole ACTIVE task."
-  (let ((current-state org-state)
-        (heading (substring-no-properties (org-get-heading t t t t))))
-    (if (string= current-state "ACTIVE")
-      (if (kaltask-active-task-p)
-          (progn
-            (message "There already is an active task.")
-            (org-todo "IMMINENT"))
-        (kaltask-set-active-task
-         heading))
-      (when (string= heading kaltask-active-task)
-          (kaltask-set-active-task nil)))))
-
-;;; Is there an `org-before-todo-state-change-hook'?
-(add-hook 'org-after-todo-state-change-hook #'kaltask-enforce-single-active)
 #+end_src
 
 
@@ -719,9 +651,9 @@ Register the agenda files.
 ;(setq org-agenda-files nil)
 
 (defvar org-agenda-files-assoc
-  '(( "agenda" . ( "* NEW %?\nAdded on %U\n%i" org-ask-location))
-    ( "notes" . "* NEW %?\nAdded on %U\n%i")
-    ( "tickler" . "* NEW %?\nDEADLINE: %^{Deadline}T\nAdded on %U\n%a\n%i"))
+  '(( "agenda" . ( "* INACTIVE %?\nAdded on %U\n%i" org-ask-location))
+    ( "notes" . "* INACTIVE %?\nAdded on %U\n%i")
+    ( "tickler" . "* INACTIVE %?\nDEADLINE: %^{Deadline}T\nAdded on %U\n%a\n%i"))
 "A agenda name associated with the format for org-capture entries."
 )
 
@@ -1383,6 +1315,17 @@ It should also be available as a git submodule of my .emacs.d repo
   (use-package tramp
     :config (setq tramp-default-method "ssh"))
 #+END_SRC
+
+** JSON
+#+begin_src emacs-lisp :tangle yes
+(use-package json-mode)
+#+end_src
+
+** Web server
+
+#+begin_src emacs-lisp :tangle yes
+(use-package web-server)
+#+end_src
 
 ** God Mode
 
