@@ -619,9 +619,10 @@ At this point this really needs to be it's own file
 
 #+begin_src emacs-lisp :tangle yes
 
-(use-package kaltask
-  :quelpa (kaltask :fetcher file
-                    :path "~/Code/Projects/kaltask"))
+  (when (file-exists-p "~/Code/Projects/kaltask")
+  (use-package kaltask
+    :quelpa (kaltask :fetcher file
+                      :path "~/Code/Projects/kaltask")))
 
 #+end_src
 
