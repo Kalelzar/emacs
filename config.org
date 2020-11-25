@@ -59,7 +59,8 @@ but it *is* hard for me to justify it.
 
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package lsp-mode
-  :commands lsp)
+  :commands lsp
+  :hook ((c++-mode scala-mode) . #'lsp))
 (use-package lsp-ui
   :commands lsp-ui-mode
   :after (lsp))
@@ -158,8 +159,10 @@ This requires =framemove.el= from [[https://github.com/emacsmirror/emacswiki.org
    :quelpa (framemove
             :fetcher url
             :url "https://raw.githubusercontent.com/emacsmirror/emacswiki.org/master/framemove.el")
-   :after (windmove)
-   :config (windmove-default-keybindings))
+   :after windmove
+   :config
+   (setq framemove-hook-into-windmove t)
+   (windmove-default-keybindings))
 #+END_SRC
 
 
@@ -744,18 +747,15 @@ agenda files.
          (capture-description (concat (concat "Add entry to " agenda-name) "."))
          (template (cdr (assoc agenda-name org-agenda-files-assoc))))
     (build-capture-template-definition
-     capture-key capture-description agenda-file template)
-    ))
+     capture-key capture-description agenda-file template)))
 
 (defun register-agenda-capture-template-from-agenda-file (agenda-file)
   (add-to-list 'org-capture-templates
-      (org-generate-agenda-capture-template-definition agenda-file))
-)
+      (org-generate-agenda-capture-template-definition agenda-file)))
 
 (defun register-agenda-capture-templates-from-agenda-files ()
   (seq-do 'register-agenda-capture-template-from-agenda-file
-        org-agenda-files
-        ))
+        org-agenda-files))
 
 (register-agenda-capture-templates-from-agenda-files)
 
@@ -851,7 +851,8 @@ We also need the [[https://melpa.org/#/ccls][emacs package]].
 #+begin_src emacs-lisp :tangle yes
   (use-package ccls
     :hook ((c-mode c++-mode objc-mode cuda-mode) .
-           (lambda () (require 'ccls) (lsp))))
+           (lambda ()
+             (ccls-code-lens-mode))))
 
   (setq ccls-executable "/usr/bin/ccls")
 #+end_src
@@ -859,8 +860,7 @@ We also need the [[https://melpa.org/#/ccls][emacs package]].
 Enable some refactoring with [[https://melpa.org/#/srefactor][srefactor]].
 
 #+begin_src emacs-lisp :tangle yes
-  (use-package srefactor
-    :hook (c-mode c++-mode))
+  (use-package srefactor)
 #+end_src
 
 This package displays function signatures in the mode line.
@@ -1636,6 +1636,21 @@ Enable icons in various buffers with [[https://melpa.org/#/all-the-icons][all-th
     :init (all-the-icons-ivy-setup))
 #+end_src
 
+Display tags everywere as fancy svg icons.
+
+#+begin_src emacs-lisp :tangle yes
+(use-package svg-tag-mode
+  :quelpa (svg-tag-mode :repo "rougier/svg-tag-mode"
+                        :fetcher github
+                        :files ("svg-tag-mode.el")))
+(define-globalized-minor-mode global-svg-tag-mode svg-tag-mode
+    (lambda () (svg-tag-mode 1)))
+
+(defun svg-tag-round (text)
+      (svg-tag-make (substring text 1 -1) nil 2 2 12))
+(setq svg-tag-tags '(("@[a-zA-Z0-9]+?@" . svg-tag-round)))
+#+end_src
+
 ** Font Ligatures
 
 Font ligatures sure are nice.
@@ -1853,7 +1868,6 @@ Sure let's go with that.
 
 )
 #+end_src
-
 
 ** Misc
 
