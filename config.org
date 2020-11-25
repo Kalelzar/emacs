@@ -283,9 +283,7 @@ Following config mostly taken from [[https://github.com/bbatsov][bbatsov's]] [[h
                             (run-hooks 'prelude-prog-mode-hook)))
 
 ;; enable on-the-fly syntax checking
-(if (fboundp 'global-flycheck-mode)
-    (global-flycheck-mode +1)
-  (add-hook 'prog-mode-hook 'flycheck-mode))
+
 
 #+end_src
 
@@ -385,6 +383,7 @@ Silence!
   :diminish flycheck-mode
   :commands global-flycheck-mode
   :init (global-flycheck-mode)
+  (add-hook 'prog-mode-hook 'flycheck-mode)
   :config (setq flycheck-html-tidy-executable "tidy5"))
 #+END_SRC
 
@@ -479,7 +478,7 @@ You also might need to install some of the (La)TeX libraries included by your di
 Enable Org Tempo mode for template expansion
 
 #+begin_src emacs-lisp :tangle yes
-  (require 'org-tempo)
+  (use-package org-tempo)
 #+end_src
 
 Source blocks
@@ -623,9 +622,10 @@ At this point this really needs to be it's own file
 
 #+begin_src emacs-lisp :tangle yes
 
-(use-package kaltask
-  :quelpa (kaltask :fetcher file
-                    :path "~/Code/Projects/kaltask"))
+  (when (file-exists-p "~/Code/Projects/kaltask")
+  (use-package kaltask
+    :quelpa (kaltask :fetcher file
+                      :path "~/Code/Projects/kaltask")))
 
 #+end_src
 
