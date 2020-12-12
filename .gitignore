@@ -36,3 +36,7 @@ _minted*
 .lsp-session*
 server
 quelpa
+/image-dired/
+.#*
+/.dap-breakpoints
+/.cache/
