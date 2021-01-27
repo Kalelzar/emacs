@@ -17,8 +17,6 @@
 
 #+END_SRC
 
-
-
 * Personal Information
 #+BEGIN_SRC emacs-lisp :tangle yes
 (setq user-full-name "Borislav Atanasov"
@@ -1310,6 +1308,15 @@ It should also be available as a git submodule of my .emacs.d repo
 (add-hook 'nov-post-html-render-hook 'nov-justify-hook)))
 #+end_src
 
+#+begin_src emacs-lisp
+(defun prepare-nov-mode-hook ()
+  "Disable `whitespace-mode' in `nov-mode' since it makes reading hard."
+  (whitespace-mode 0)
+  (novel-mode))
+
+(add-hook 'nov-post-html-render-hook 'prepare-nov-mode-hook)
+#+end_src
+
 ** Tramp
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package tramp
@@ -1321,12 +1328,39 @@ It should also be available as a git submodule of my .emacs.d repo
 (use-package json-mode)
 #+end_src
 
-** Web server
+** Centered Window Mode
+#+begin_src emacs-lisp
+;(use-package centered-window-mode)
 
+(defvar cwm-whitelist '(nov-mode)
+  "Whitelist `centered-window-mode' in the given major modes")
+
+(defun buffer-mode (&optional buffer-or-name)
+  "Returns the major mode associated with a buffer.
+If buffer-or-name is nil return current buffer's mode."
+  (buffer-local-value 'major-mode
+   (if buffer-or-name (get-buffer buffer-or-name) (current-buffer))))
+
+;(defun centered-window-mode-on-buffer-switch-hook ())
+;  (if (member (buffer-mode) cwm-whitelist)
+;      (centered-window-mode 1)
+;    (centered-window-mode 0)))
+
+
+
+;(setq cwm-centered-window-width 80)
+;(setq cwm-incremental-padding t)
+;(setq cwm-incremental-padding-% 20)
+
+;(add-hook 'buffer-list-update-hook 'centered-window-mode-on-buffer-switch-hook)
+#+end_src
+
+
+
+** Web server
 #+begin_src emacs-lisp :tangle yes
 (use-package web-server)
 #+end_src
-
 ** God Mode
 
 #+begin_src emacs-lisp :tangle yes
