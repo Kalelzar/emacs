@@ -1698,6 +1698,8 @@ Change color of mode line when in god-mode
                                 (other-window -1))) ;; back one
 (bind-key "C-k" 'crux-kill-whole-line)
 
+(bind-key "C-M-x" 'kmacro-call-macro)
+
 (bind-key "C-c c" 'org-capture)
 (bind-key "C-c a" 'org-agenda)
 
