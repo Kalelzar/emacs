@@ -139,11 +139,13 @@ More convenient ~*scratch*~ buffers
 You really shouldn't do anything without it (or an equivalent).
 
 #+BEGIN_SRC emacs-lisp :tangle yes
+(setq use-package-ensure-function 'use-package-ensure-elpa)
 (use-package undo-tree
-  :quelpa (undo-tree :fetcher url
-                     :url "http://git.savannah.gnu.org/cgit/emacs/elpa.git/plain/packages/undo-tree/undo-tree.el")
+;  :quelpa (undo-tree :fetcher url
+;                     :url "http://git.savannah.gnu.org/cgit/emacs/elpa.git/plain/packages/undo-tree/undo-tree.el")
   :diminish undo-tree-mode
   :config (global-undo-tree-mode))
+(setq use-package-ensure-function 'quelpa)
 #+END_SRC
 
 #+RESULTS:
