@@ -1001,6 +1001,75 @@ Set up alerts for agenda items.
 #+RESULTS:
 : t
 
+*** Roam
+
+#+begin_src emacs-lisp :tangle yes
+(use-package org-roam)
+(unless (f-dir? "~/Documents/Knowledge")
+  (make-directory "~/Documents/Knowledge"))
+(setq org-roam-directory "~/Documents/Knowledge")
+(setq org-roam-db-location "~/Documents/Knowledge/org-roam.db")
+(setq org-roam-link-auto-replace t)
+(add-hook 'after-init-hook 'org-roam-mode)
+
+(setq org-roam-title-sources '((title headline) alias))
+(setq org-roam-tag-sources '(prop vanilla all-directories))
+
+(setq org-roam-graph-exclude-matcher "recentchanges.org")
+(setq org-roam-graph-node-extra-config '(("shape"      . "rectangle")
+          ("style"      . "rounded,filled")
+          ("fillcolor"  . "#273434")
+          ("fontname" . "sans")
+          ("fontsize" . "12px")
+          ("labelfontname" . "sans")
+          ("color"      . "#b75867")
+          ("fontcolor"  . "#c4c7c7")))
+
+(setq org-roam-graph-edge-extra-config
+      '(("dir" . "back")
+        ("color" . "#b75867")))
+
+
+(setq org-roam-graph-extra-config
+      '(("rankdir" . "BT")
+         ("bgcolor" . "\"#132020\"")))
+
+(org-roam-graph-build)
+
+(defvar roam-subjects '("Numeric Methods"
+                        "Linear Algebra"
+                        "Logic Programming"
+                        "Computer Architectures"
+                        "Design and Analysis of Algorithms"
+                        "Discrete Structures"
+                        "Geometry of Movement")
+"Subjects used as auto-complete for `make-roam-template'")
+
+(defun make-roam-template (name)
+  "Create roam template with NAME."
+  (let ((key (char-to-string (downcase (string-to-char name))))
+        (completion (string-join roam-subjects "|")))
+    `(,key ,name entry #'org-roam--capture-get-point
+           "* ${title}\n %?"
+           :file-name "${title}"
+           :head ,(concat "#+title: ${title}\n#+roam_alias: \"${title}\"\n#+roam_tags: \"%^{prompt|General|"
+                          completion
+                          "}\" \""
+                          name
+                          "\"\n")
+           :unnarrowed t)))
+
+(defvar roam-template-types '("Theorem" "Definition" "Lecture"))
+
+(setq org-roam-capture-templates nil)
+
+(dolist (template (mapcar #'make-roam-template roam-template-types))
+  (add-to-list 'org-roam-capture-templates template))
+
+(require 'org-roam-protocol)
+
+#+end_src
+
 ** C/C++
 
 Set LSP for C/C++ using [[https://github.com/MaskRay/ccls][ccls]].
@@ -1672,7 +1741,6 @@ Change color of mode line when in god-mode
 
 (define-key org-mode-map (kbd "H-s") 'org-agenda-sync)
 #+end_src
-
 ** C
 #+begin_src emacs-lisp :tangle yes
   (define-key c-mode-map (kbd "C-c r") 'srefactor-refactor-at-point)
@@ -1711,6 +1779,8 @@ Change color of mode line when in god-mode
 
 #+end_src
 
+
+
 #+RESULTS:
 : hippie-expand
 
@@ -1738,6 +1808,24 @@ ARG is passed to 'save-buffer'"
 
   :bind ("C-=" . er/expand-region))
 #+END_SRC
+*** Roam
+
+#+begin_src emacs-lisp :tangle yes
+
+(defvar global-roam-map (make-keymap "Org-Roam")
+"Global keymap for org-roam commands")
+
+(bind-key "C-j" global-roam-map)
+(bind-key "C-j" global-roam-map org-mode-map)
+
+(bind-key "C-j j" #'org-roam-capture)
+(bind-key "C-j J" #'org-roam-find-file)
+
+(bind-key "C-j C-j" #'org-roam-insert)
+
+(bind-key "C-j b" #'org-roam)
+
+#+end_src
 
 * User Interface
 
