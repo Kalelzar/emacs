@@ -1018,6 +1018,8 @@ Set up alerts for agenda items.
 (setq org-roam-tag-sources '(prop vanilla all-directories))
 (setq org-roam-index-file "index.org")
 
+(setq org-roam-completion-everywhere t)
+
 (setq org-id-track-globally t)
 
 (org-id-update-id-locations (f-glob "*.org" org-roam-directory))
@@ -1308,6 +1310,10 @@ on the command line. Use an easy keybinding to access magit.
   (setq magit-diff-refine-hunk t))
 (add-hook 'magit-process-find-password-functions
             #'magit-process-password-auth-source)
+(setq magit-repository-directories '(("~/" . 0)
+                                     ("~/.config/" . 1)
+                                     ("~/Code" . 2)
+                                     ("~/.local/src" . 4)))
 #+END_SRC
 
 #+RESULTS:
@@ -1542,8 +1548,10 @@ Auto completion
     (setq company-idle-delay .15)
     (setq company-echo-delay 0)
     (setq company-begin-commands '(self-insert-command))
+    (setq company-backends
     (define-key company-active-map (kbd "C-n") #'company-select-next)
     (define-key company-active-map (kbd "C-p") #'company-select-previous))
+(global-company-mode)
 #+END_SRC
 
 #+RESULTS:
@@ -1841,8 +1849,8 @@ ARG is passed to 'save-buffer'"
 (bind-key "C-j" global-roam-map)
 (bind-key "C-j" global-roam-map org-mode-map)
 
-(bind-key "C-j j" #'org-roam-capture)
-(bind-key "C-j J" #'org-roam-find-file)
+(bind-key "C-j J" #'org-roam-capture)
+(bind-key "C-j j" #'org-roam-find-file)
 
 (bind-key "C-j C-j" #'org-roam-insert)
 

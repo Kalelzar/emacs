@@ -13,7 +13,7 @@
  '(doc-view-continuous t)
  '(doom-modeline-mode t)
  '(ede-project-directories '("/home/kalelzar/Code/cpp/pulsebind"))
- '(global-undo-tree-mode nil)
+ '(global-undo-tree-mode t)
  '(global-whitespace-mode t)
  '(org-agenda-files
    '("~/Documents/tickler.org" "~/Documents/notes.org" "~/Documents/agenda.org"))
