@@ -1016,6 +1016,29 @@ Set up alerts for agenda items.
 
 (setq org-roam-title-sources '((title headline) alias))
 (setq org-roam-tag-sources '(prop vanilla all-directories))
+(setq org-roam-index-file "index.org")
+
+(setq org-id-track-globally t)
+
+(org-id-update-id-locations (f-glob "*.org" org-roam-directory))
+
+
+(use-package lister
+  :quelpa (lister :fetcher git
+  		  :url "https://github.com/publicimageltd/lister"))
+
+(use-package delve
+  :quelpa (delve :fetcher git
+		 :url "https://github.com/publicimageltd/delve")
+  :config
+  (use-package delve-minor-mode
+    :config
+    (add-hook 'org-mode-hook #'delve-minor-mode-maybe-activate))
+  :bind
+  (("<f12>" . delve-open-or-select)))
+
+(setq delve-use-icons-in-completions t)
+
 
 (setq org-roam-graph-exclude-matcher "recentchanges.org")
 (setq org-roam-graph-node-extra-config '(("shape"      . "rectangle")
@@ -1035,8 +1058,6 @@ Set up alerts for agenda items.
 (setq org-roam-graph-extra-config
       '(("rankdir" . "BT")
          ("bgcolor" . "\"#132020\"")))
-
-(org-roam-graph-build)
 
 (defvar roam-subjects '("Numeric Methods"
                         "Linear Algebra"
