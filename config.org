@@ -767,7 +767,6 @@ At this point this really needs to be it's own file
   (use-package kaltask
     :quelpa (kaltask :fetcher file
                       :path "~/Code/Projects/kaltask")))
-
 #+end_src
 
 #+RESULTS:
@@ -1024,7 +1023,6 @@ Set up alerts for agenda items.
 
 (org-id-update-id-locations (f-glob "*.org" org-roam-directory))
 
-
 (use-package lister
   :quelpa (lister :fetcher git
   		  :url "https://github.com/publicimageltd/lister"))
@@ -1041,6 +1039,40 @@ Set up alerts for agenda items.
 
 (setq delve-use-icons-in-completions t)
 
+(defun find-roam-notes-with-tag (tag)
+  (let ((search (delve-db-query-pages-with-tag tag)))
+    (when search
+      (delve search (format "of tag %s" tag)))))
+
+(defun org-roam-open-file-by-title (title)
+  (org-roam--find-file
+   (first
+    (-flatten
+     (org-roam-db-query [:select [file]
+                                 :from titles
+                                 :where (= title $s1)]
+                        title)))))
+
+(defun org-roam-protocol-find-tag (info)
+  (when-let ((tag (plist-get info :tag)))
+    (raise-frame)
+    (find-roam-notes-with-tag tag))
+  nil)
+
+(defun org-roam-protocol-find-by-title (info)
+  (when-let ((title (plist-get info :title)))
+        (raise-frame)
+        (org-roam-open-file-by-title title)))
+
+(require 'org-protocol)
+
+(push '("org-roam-tag" :protocol "roam-tag"
+:function org-roam-protocol-find-tag)
+      org-protocol-protocol-alist)
+
+(push '("org-roam-file-by-title" :protocol "roam-by-title"
+        :function org-roam-protocol-find-by-title)
+      org-protocol-protocol-alist)
 
 (setq org-roam-graph-exclude-matcher "recentchanges.org")
 (setq org-roam-graph-node-extra-config '(("shape"      . "rectangle")
@@ -1060,6 +1092,20 @@ Set up alerts for agenda items.
 (setq org-roam-graph-extra-config
       '(("rankdir" . "BT")
          ("bgcolor" . "\"#132020\"")))
+
+(use-package org-roam-server
+  :config
+  (setq org-roam-server-host "127.0.0.1"
+        org-roam-server-port 7000
+        org-roam-server-authenticate nil
+        org-roam-server-export-inline-images t
+        org-roam-server-serve-files nil
+        org-roam-server-served-file-extensions '("pdf" "mp4" "ogv")
+        org-roam-server-network-poll t
+        org-roam-server-network-arrows nil
+        org-roam-server-network-label-truncate t
+        org-roam-server-network-label-truncate-length 60
+        org-roam-server-network-label-wrap-length 20))
 
 (defvar roam-subjects '("Numeric Methods"
                         "Linear Algebra"
@@ -1548,7 +1594,6 @@ Auto completion
     (setq company-idle-delay .15)
     (setq company-echo-delay 0)
     (setq company-begin-commands '(self-insert-command))
-    (setq company-backends
     (define-key company-active-map (kbd "C-n") #'company-select-next)
     (define-key company-active-map (kbd "C-p") #'company-select-previous))
 (global-company-mode)
