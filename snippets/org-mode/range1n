@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex range from 1 to n
+# key: range1n
+# group: Latex
+# --
+
+$1 = \overline{1, n}

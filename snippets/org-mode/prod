@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex Product
+# key: prod
+# group: Latex
+# --
+
+\prod_{$1=$2}^ {$3}\limits{}$0

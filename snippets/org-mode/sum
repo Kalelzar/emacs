@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex Sum
+# key: sum
+# group: Latex
+# --
+
+\sum_{$1=$2} ^{$3}$0

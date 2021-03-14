@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex Sum from i=0 to n
+# key: sumn
+# group: Latex
+# --
+
+\sum_{i=0}^{n}\limits{}$0

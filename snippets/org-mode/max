@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex max
+# key: max
+# group: Latex
+# --
+
+\max$0

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex max from a to b
+# key: maxab
+# group: Latex
+# --
+
+\max_{$1 \in [$2, $3]}\limits{}$0

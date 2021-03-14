@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex absolute
+# key: abs
+# group: Latex
+# --
+
+\lvert{}$1\rvert{}$0

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex Fraction 1/n
+# key: frac1
+# group: Latex
+# --
+
+\frac{1}{$1}$0

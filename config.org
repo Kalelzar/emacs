@@ -559,6 +559,8 @@ You also might need to install some of the (La)TeX libraries included by your di
     (add-to-list 'org-latex-packages-alist '("" "minted"))
     (add-to-list 'org-latex-packages-alist '("" "color"))
     (add-to-list 'org-latex-packages-alist '("" "xcolor"))
+    (add-to-list 'org-latex-packages-alist '("" "mathtools"))
+    (add-to-list 'org-latex-packages-alist '("" "amsmath"))
     (setq org-latex-listings 'minted)
 
     (setq org-latex-pdf-process

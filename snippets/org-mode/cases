@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: Latex Cases
+# key: cases
+# group: Latex
+# --
+
+
+\begin{cases}
+  $1 & $2\\\\
+  $0
+\end{cases}

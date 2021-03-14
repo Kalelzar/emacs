@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex min
+# key: min
+# group: Latex
+# --
+
+\min$0

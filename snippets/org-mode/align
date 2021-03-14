@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: Latex align
+# key: align
+# group: Latex
+# --
+
+\begin{align*}
+$1
+\end{align*}
+$0

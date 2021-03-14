@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex range
+# key: range
+# group: Latex
+# --
+
+$1 = \overline{$2, $3}

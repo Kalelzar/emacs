@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex Product from i=0 to n, with condition
+# key: prodn?
+# group: Latex
+# --
+
+\prod_{i=0,$1}^{n}\limits{}$0
