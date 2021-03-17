@@ -12,8 +12,6 @@
 ;;; Code:
 
 
-
-
 #+END_SRC
 
 * Personal Information
@@ -35,6 +33,28 @@ Set the cusomize file to a separate file.
 #+RESULTS:
 : t
 
+
+
+#+begin_src emacs-lisp :tangle yes
+
+(defun get-repo-for-title ()
+  (when buffer-file-name
+    (s-wrap
+   (s-chop-prefix "/"
+                  (second
+                   (s-split ":"
+                            (repo-origin
+                             (projectile-project-root
+                              (f-dirname
+                               (buffer-file-name)))))))
+   "[" "]")))
+
+(setq frame-title-format
+                    '("" "emacs - %b " (:eval (get-repo-for-title))))
+
+
+
+#+end_src
 
 Allow installations from packages from github
 
@@ -65,7 +85,7 @@ but it *is* hard for me to justify it.
   :hook ((c++-mode scala-mode) . #'lsp))
 (use-package lsp-ui
   :commands lsp-ui-mode
-  :after (lsp))
+  :after lsp)
 (use-package company-lsp
   :commands company-lsp
   :after (lsp company))
@@ -162,7 +182,8 @@ Crux.
 Auto rename pair tag in html/xml
 
 #+begin_src emacs-lisp :tangle yes
-(use-package auto-rename-tag)
+(use-package auto-rename-tag
+  :defer t)
 #+end_src
 
 
@@ -189,7 +210,11 @@ Switch between visible buffers / frames with shift + arrow keys
 This requires =framemove.el= from [[https://github.com/emacsmirror/emacswiki.org/blob/master/framemove.el][EmacsWiki]].
 
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package windmove)
+(use-package windmove
+  :bind (("S-<up>" . windmove-up)
+         ("S-<left>" . windmove-left)
+         ("S-<right>" . windmove-right)
+         ("S-<down>" . windmove-down)))
 ;(add-to-list 'load-path "~/.config/emacs/elpa/framemove/")
 ;(require 'framemove)
 (use-package framemove
@@ -242,7 +267,8 @@ Add the ability to kill the current line without marking it
 
 Automatically clean up unused buffers.
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package midnight)
+(use-package midnight
+  :defer 30)
 #+END_SRC
 
 #+RESULTS:
@@ -515,10 +541,9 @@ Silence!
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package flycheck
   :diminish flycheck-mode
-  :commands global-flycheck-mode
-  :init (global-flycheck-mode)
-  (add-hook 'prog-mode-hook 'flycheck-mode)
-  :config (setq flycheck-html-tidy-executable "tidy5"))
+  :commands (global-flycheck-mode flycheck-mode)
+  :config
+  (setq flycheck-html-tidy-executable "tidy5"))
 #+END_SRC
 
 #+RESULTS:
@@ -534,19 +559,18 @@ Enable flyspell
   :bind ("C->" . flyspell-correct-word-before-point)
   :config (setq ispell-program-name "aspell"
                 ispell-extra-args (listp "--sug-mode=ultra"))
-  (flyspell-mode 1))
+  (flyspell-mode +1))
 
 #+END_SRC
 
 #+RESULTS:
 : flyspell-correct-word-before-point
-
 ** Org
 
 Fetch the latest version of org mode as per [[http://orgmode.org/elpa.html][this instructions]].
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package org
-    :ensure org-plus-contrib)
+(use-package org
+  :ensure org-plus-contrib)
 #+END_SRC
 
 #+RESULTS:
@@ -579,19 +603,12 @@ Enable some languages for evaluation in Org code blocks.
 
 I mainly export to \LaTeX but that comes installed by default.
 
-I also occasionally have need to export to [[https://melpa.org/#/ox-epub][epub]].
-
-#+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package ox-epub
-    :after org)
-#+END_SRC
-
 #+RESULTS:
 
 #+begin_src emacs-lisp :tangle yes
   (setq org-export-backends
      (quote
-      (ascii beamer html latex epub)))
+      (html latex)))
 #+end_src
 
 #+RESULTS:
@@ -642,12 +659,12 @@ Enable Org Tempo mode for template expansion
 
 Source blocks
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-  (add-to-list 'org-structure-template-alist '("ll" . "src lisp"))
-  (add-to-list 'org-structure-template-alist '("py" . "src python"))
-  (add-to-list 'org-structure-template-alist '("sh" . "src sh"))
-  (add-to-list 'org-structure-template-alist '("bh" . "src bash"))
-  (add-to-list 'org-structure-template-alist '("sc" . "src scala"))
+(add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+(add-to-list 'org-structure-template-alist '("ll" . "src lisp"))
+(add-to-list 'org-structure-template-alist '("py" . "src python"))
+(add-to-list 'org-structure-template-alist '("sh" . "src sh"))
+(add-to-list 'org-structure-template-alist '("bh" . "src bash"))
+(add-to-list 'org-structure-template-alist '("sc" . "src scala"))
 #+END_SRC
 
 #+RESULTS:
@@ -1072,7 +1089,8 @@ Set up alerts for agenda items.
 *** Roam
 
 #+begin_src emacs-lisp :tangle yes
-(use-package org-roam)
+(use-package org-roam
+  :config
 (unless (f-dir? "~/Documents/Knowledge")
   (make-directory "~/Documents/Knowledge"))
 (setq org-roam-directory "~/Documents/Knowledge")
@@ -1088,23 +1106,26 @@ Set up alerts for agenda items.
 
 (setq org-id-track-globally t)
 
-(org-id-update-id-locations (f-glob "*.org" org-roam-directory))
+(org-id-update-id-locations (f-glob "*.org" org-roam-directory)))
 
 (use-package lister
+  :after org-roam
   :quelpa (lister :fetcher git
   		  :url "https://github.com/publicimageltd/lister"))
 
 (use-package delve
+  :after lister
   :quelpa (delve :fetcher git
 		 :url "https://github.com/publicimageltd/delve")
   :config
   (use-package delve-minor-mode
     :config
-    (add-hook 'org-mode-hook #'delve-minor-mode-maybe-activate))
+    (add-hook 'org-mode-hook #'delve-minor-mode-maybe-activate)
+    (setq delve-use-icons-in-completions t))
   :bind
   (("<f12>" . delve-open-or-select)))
 
-(setq delve-use-icons-in-completions t)
+
 
 (defun find-roam-notes-with-tag (tag)
   (let ((search (delve-db-query-pages-with-tag tag)))
@@ -1161,6 +1182,7 @@ Set up alerts for agenda items.
          ("bgcolor" . "\"#132020\"")))
 
 (use-package org-roam-server
+  :commands org-roam-server-mode
   :config
   (setq org-roam-server-host "127.0.0.1"
         org-roam-server-port 7000
@@ -1204,10 +1226,7 @@ Set up alerts for agenda items.
 (dolist (template (mapcar #'make-roam-template roam-template-types))
   (add-to-list 'org-roam-capture-templates template))
 
-(require 'org-roam-protocol)
-
 #+end_src
-
 ** C/C++
 
 Set LSP for C/C++ using [[https://github.com/MaskRay/ccls][ccls]].
@@ -1219,12 +1238,12 @@ sudo pacman -S ccls
 We also need the [[https://melpa.org/#/ccls][emacs package]].
 
 #+begin_src emacs-lisp :tangle yes
-  (use-package ccls
-    :hook ((c-mode c++-mode objc-mode cuda-mode) .
-           (lambda ()
-             (ccls-code-lens-mode))))
+(use-package ccls
+  :hook ((c-mode c++-mode objc-mode cuda-mode) .
+         (lambda ()
+           (ccls-code-lens-mode))))
 
-  (setq ccls-executable "/usr/bin/ccls")
+(setq ccls-executable "/usr/bin/ccls")
 #+end_src
 
 #+RESULTS:
@@ -1233,7 +1252,8 @@ We also need the [[https://melpa.org/#/ccls][emacs package]].
 Enable some refactoring with [[https://melpa.org/#/srefactor][srefactor]].
 
 #+begin_src emacs-lisp :tangle yes
-  (use-package srefactor)
+  (use-package srefactor
+    :after ccls)
 #+end_src
 
 #+RESULTS:
@@ -1283,6 +1303,15 @@ Just because it's possible.
 #+RESULTS:
 : t
 
+** Emms
+#+begin_src emacs-lisp :tangle yes
+
+(use-package emms
+  :config
+  (emms-all)
+  (emms-default-players))
+
+#+end_src
 ** Reading
 
 Make reading stuff in Emacs easier.
@@ -1415,8 +1444,10 @@ Make reading stuff in Emacs easier.
 
 ** Typescript
 #+begin_src emacs-lisp :tangle yes
-(use-package typescript-mode)
-(use-package tss)
+(use-package typescript-mode
+  :commands typescript-mode)
+(use-package tss
+  :after typescript-mode)
 #+end_src
 
 ** Cakecrumbs
@@ -1457,7 +1488,8 @@ Use emacs as a calibre client.
 
 ** Vue
 #+begin_src emacs-lisp :tangle yes
-(use-package vue-mode)
+(use-package vue-mode
+  :commands vue-mode)
 #+end_src
 ** Magit
 A great interface for git projects.
@@ -1466,7 +1498,7 @@ on the command line. Use an easy keybinding to access magit.
 
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package magit
-  :defer t
+  :demand
   :bind (("C-c g" . magit-status)
          ("C-c G" . magit-dispatch)
          ("C-c m l" . magit-log-buffer-file)
@@ -1530,6 +1562,7 @@ Enable Yasnippets.
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package yasnippet
   :diminish yas-minor-mode
+  :defer 15
   :config
   (setq yas-indent-line 'fixed)
   (yas-global-mode))
@@ -1542,7 +1575,8 @@ We do however still need some snippets.
 
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package common-lisp-snippets
-  :after yasnippet)
+  :commands lisp-mode
+  :after (yasnippet common-lisp))
 (use-package yasnippet-snippets
   :after yasnippet)
 #+END_SRC
@@ -1689,7 +1723,7 @@ Project management and navigation.
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package projectile
   :diminish projectile-mode
-  :commands (projectile-mode projectile-switch-project)
+  :demand
   :bind (("C-c p p" . projectile-switch-project)
          ("C-c p s s" . projectile-ag)
          ("C-c p s r" . projectile-ripgrep))
@@ -1829,7 +1863,8 @@ It should also be available as a git submodule of my .emacs.d repo
 
 ** CMake
 #+begin_src emacs-lisp :tangle yes
-(use-package cmake-mode)
+(use-package cmake-mode
+  :commands cmake-mode)
 
 (defun maybe-cmake-project-mode ()
   (if (or (file-exists-p "CMakeLists.txt")
@@ -1837,6 +1872,7 @@ It should also be available as a git submodule of my .emacs.d repo
       (cmake-project-mode)))
 
 (use-package cmake-project
+  :after cmake-mode
   :config
   (add-hook 'c-mode-hook 'maybe-cmake-project-mode)
   (add-hook 'c++-mode-hook 'maybe-cmake-project-mode))
@@ -1980,6 +2016,7 @@ Change color of mode line when in god-mode
 (global-set-key (kbd "C-x O") (lambda ()
                                 (interactive)
                                 (other-window -1))) ;; back one
+
 (bind-key "C-k" 'crux-kill-whole-line)
 
 (bind-key "C-M-x" 'kmacro-call-macro)
@@ -1991,7 +2028,7 @@ Change color of mode line when in god-mode
 
 (bind-key "M-y" 'helm-show-kill-ring)
 
-(bind-key "C-x b" 'counsel-switch-buffer)
+(bind-key "C-x b" 'ivy-switch-buffer)
 
 #+end_src
 
@@ -2203,20 +2240,21 @@ Enable icons in various buffers with [[https://melpa.org/#/all-the-icons][all-th
   (use-package all-the-icons)
 
   (use-package all-the-icons-ibuffer
-    :after all-the-icons
+    :after (all-the-icons ibuffer)
+    :commands ibuffer
     :config (all-the-icons-ibuffer-mode 1))
 
   (use-package all-the-icons-gnus
-    :after all-the-icons
-    :init (all-the-icons-gnus-setup))
+    :after (all-the-icons gnus)
+    :config (all-the-icons-gnus-setup))
 
   (use-package all-the-icons-dired
-    :after all-the-icons
-    :init (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
+    :after (all-the-icons ibuffer)
+    :config (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
 
   (use-package all-the-icons-ivy
     :after (all-the-icons ivy)
-    :init (all-the-icons-ivy-setup))
+    :config (all-the-icons-ivy-setup))
 #+end_src
 
 Display tags everywere as fancy svg icons.
@@ -2375,8 +2413,7 @@ information from there.
   (cl-loop for n
          from 0
          below (or count 10)
-         collect (nth n recentf-list))
-  )
+         collect (nth n recentf-list)))
 #+end_src
 
 There has to be an emacs lisp function to get the first N elements of a list
@@ -2417,12 +2454,10 @@ cloned.
 (defun repo-origin (repo)
   "Return the origin remote of REPO."
   (magit-with-repository repo
-                         (magit-get "remote.origin.url"))
-  )
+                         (magit-get "remote.origin.url")))
 
 (defun last-repos (&optional count)
-  (mapcar #'repo-origin (last-repos-dir count))
-)
+  (mapcar #'repo-origin (last-repos-dir count)))
 #+end_src
 
 Let's see if it gets it right.

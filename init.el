@@ -12,6 +12,12 @@
 
 (setq inhibit-startup-message t)
 (setq initial-scratch-message "")
+(setq initial-buffer-choice
+      #'(lambda ()
+          (let ((buffer (get-buffer "*Magit Repositories*")))
+            (if (buffer-live-p buffer)
+                buffer
+              (magit-list-repositories)))))
 
 ;;; Set up package
 (require 'package)
@@ -45,6 +51,7 @@
 
 (setq use-package-ensure-function 'quelpa)
 (setq use-package-always-ensure t)
+(setq use-package-compute-statistics t)
 
 (require 'bind-key)
 
@@ -54,3 +61,56 @@
 (message "Init done")
 (provide 'init)
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(use-package-defaults
+   '((:config
+      (lambda
+        (name args)
+        (imsg "Config" name))
+      t)
+     (:init
+      (lambda
+        (name args)
+        (imsg "Init" name))
+      t)
+     (:catch
+      (lambda
+        (name args)
+        (ierr "Error" name))
+      (lambda
+        (name args)
+        (not use-package-expand-minimally)))
+     (:defer use-package-always-defer
+             (lambda
+               (name args)
+               (and use-package-always-defer
+                    (not
+                     (plist-member args :defer))
+                    (not
+                     (plist-member args :demand)))))
+     (:demand use-package-always-demand
+              (lambda
+                (name args)
+                (and use-package-always-demand
+                     (not
+                      (plist-member args :defer))
+                     (not
+                      (plist-member args :demand)))))
+     (:ensure
+      (list use-package-always-ensure)
+      (lambda
+        (name args)
+        (and use-package-always-ensure
+             (not
+              (plist-member args :load-path)))))
+     (:pin use-package-always-pin use-package-always-pin))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
