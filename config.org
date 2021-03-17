@@ -159,6 +159,12 @@ Crux.
 
 #+RESULTS:
 
+Auto rename pair tag in html/xml
+
+#+begin_src emacs-lisp :tangle yes
+(use-package auto-rename-tag)
+#+end_src
+
 
 Revert buffer automatically when underlying file is changed outside of Emacs.
 
@@ -376,14 +382,23 @@ aren't explicitly installed by config."
      #'intern
      (get-packages-installed-by-config)))))
 
-(defun show-selected-packages-not-in-config ()
-  "Open a buffer containing all (not-dependency) packages not explicitly installed in config."
+(defun show-populated-buffer (populate-function buffer-name)
+  "Open a buffer called BUFFER_NAME and fill it using POPULATE_FUNCTION"
+  (with-current-buffer (get-buffer-create buffer-name)
+    (insert (s-join "\n" (funcall populate-function))))
+  (view-buffer buffer-name #'kill-buffer))
+
+(defun show-packages-installed-by-config ()
+  "Open a buffer containing all packages explicitly installed by config."
   (interactive)
-  (with-current-buffer "*Missing Packages*"
-    (kill-region (buffer-end -1) (buffer-end 1))
-    (insert (s-join "\n" (get-selected-packages-not-in-config))))
-  (view-buffer "*Missing Packages*" #'kill-buffer)
-  (goto-char (point-min)))
+  (show-populated-buffer #'get-packages-installed-by-config
+                         "*Installed Packages*"))
+
+(defun show-selected-packages-not-in-config ()
+  "Open a buffer containing all (not-dependency) packages not explicitly installed by config."
+  (interactive)
+  (show-populated-buffer #'get-selected-packages-not-in-config
+                         "*Missing Packages*"))
 #+end_src
 
 * Sane Defaults
@@ -1404,6 +1419,42 @@ Make reading stuff in Emacs easier.
 (use-package tss)
 #+end_src
 
+** Cakecrumbs
+
+Show parent's chain on header for web-releated files
+
+#+begin_src emacs-lisp :tangle yes
+(use-package cakecrumbs
+  :config
+  (setq cakecrumbs-html-major-modes   '(mhtml-mode html-mode web-mode nxml-mode sgml-mode))
+  (setq cakecrumbs-jade-major-modes   '(yajade-mode jade-mode pug-mode))
+  (setq cakecrumbs-scss-major-modes   '(scss-mode less-css-mode css-mode))
+  (setq cakecrumbs-stylus-major-modes '(stylus-mode sass-mode))
+  (cakecrumbs-auto-setup)
+  (setq cakecrumbs-separator ">"))
+#+end_src
+
+** CalibreDB
+
+Use emacs as a calibre client.
+
+#+begin_src emacs-lisp :tangle yes
+(use-package calibredb
+  :defer t
+  :commands (calibredb calibredb-find-counsel)
+  :config
+  (setq calibredb-root-dir "~/Documents/Library")
+  (setq calibredb-db-dir (f-join calibredb-root-dir "metadata.db"))
+  (setq calibredb-ref-default-bibliography (f-join calibredb-root-dir "catalog.bib"))
+  (setq calibredb-library-alist '(("~/Documents/Library")))
+  (setq calibredb-format-all-the-icons t)
+  (setq calibredb-virtual-library-alist
+        '(("Default" . "^\\(epub\\|mobi\\|pdf\\|docx\\)")))
+  (setq calibredb-virtual-library-default-name "Default")
+)
+
+#+end_src
+
 ** Vue
 #+begin_src emacs-lisp :tangle yes
 (use-package vue-mode)
@@ -1770,12 +1821,26 @@ It should also be available as a git submodule of my .emacs.d repo
 #+begin_src emacs-lisp :tangle yes
 (defun prepare-nov-mode-hook ()
   "Disable `whitespace-mode' in `nov-mode' since it makes reading hard."
-  (whitespace-mode 0)
-  (novel-mode))
+  (whitespace-mode 1)
+  (whitespace-mode 0))
 
 (add-hook 'nov-post-html-render-hook 'prepare-nov-mode-hook)
 #+end_src
 
+** CMake
+#+begin_src emacs-lisp :tangle yes
+(use-package cmake-mode)
+
+(defun maybe-cmake-project-mode ()
+  (if (or (file-exists-p "CMakeLists.txt")
+          (file-exists-p (expand-file-name "CMakeLists.txt" (car (project-roots (project-current))))))
+      (cmake-project-mode)))
+
+(use-package cmake-project
+  :config
+  (add-hook 'c-mode-hook 'maybe-cmake-project-mode)
+  (add-hook 'c++-mode-hook 'maybe-cmake-project-mode))
+#+end_src
 ** Tramp
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package tramp
@@ -1813,7 +1878,6 @@ If buffer-or-name is nil return current buffer's mode."
 
 ;(add-hook 'buffer-list-update-hook 'centered-window-mode-on-buffer-switch-hook)
 #+end_src
-
 ** Web server
 #+begin_src emacs-lisp :tangle yes
 (use-package web-server)
