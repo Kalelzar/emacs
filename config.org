@@ -336,12 +336,55 @@ Following config mostly taken from [[https://github.com/bbatsov][bbatsov's]] [[h
                             (run-hooks 'prelude-prog-mode-hook)))
 
 ;; enable on-the-fly syntax checking
-
-
 #+end_src
 
 #+RESULTS:
 | lambda | nil | (run-hooks 'prelude-prog-mode-hook) |
+** Packages
+
+I have recently (READ: for a few months) been skimping on installing new
+packages the proper way, since it is way easier to just run
+=(package-list-packages)= that to write stuff in the config.
+
+
+I wanted to rectify that so I wrote a couple of helper functions.
+
+#+begin_src emacs-lisp :tangle yes
+(defun get-packages-installed-by-config ()
+  "Return a list of all packages installed with `use-package' by the config."
+  (--map
+   (s-replace ")" "" (second (s-split " " it)))
+   (--filter
+    (s-prefix? "(use-package" it)
+    (--map
+     (s-trim it)
+     (--filter
+      (s-contains? "use-package" it)
+      (-flatten
+       (--map
+        (s-lines (f-read it))
+        (f-glob "*.el" user-emacs-directory))))))))
+
+(defun get-selected-packages-not-in-config ()
+  "Return a list of all packages that are in `package-selected-packages' but
+aren't explicitly installed by config."
+  (-map
+   #'symbol-name
+   (-difference
+    (package--find-non-dependencies)
+    (-map
+     #'intern
+     (get-packages-installed-by-config)))))
+
+(defun show-selected-packages-not-in-config ()
+  "Open a buffer containing all (not-dependency) packages not explicitly installed in config."
+  (interactive)
+  (with-current-buffer "*Missing Packages*"
+    (kill-region (buffer-end -1) (buffer-end 1))
+    (insert (s-join "\n" (get-selected-packages-not-in-config))))
+  (view-buffer "*Missing Packages*" #'kill-buffer)
+  (goto-char (point-min)))
+#+end_src
 
 * Sane Defaults
 
@@ -761,14 +804,11 @@ Set custom faces for TODO keywords.
 Obviously you can't really work on two tasks at the same time.
 So let's enforce a single ACTIVE task at all times.
 
-At this point this really needs to be it's own file
-
 #+begin_src emacs-lisp :tangle yes
-
-  (when (file-exists-p "~/Code/Projects/kaltask")
+(when (file-exists-p "~/Code/Projects/kaltask")
   (use-package kaltask
     :quelpa (kaltask :fetcher file
-                      :path "~/Code/Projects/kaltask")))
+                     :path "~/Code/Projects/kaltask")))
 #+end_src
 
 #+RESULTS:
@@ -790,8 +830,18 @@ Enable org-drill.
 (setq org-drill-hide-item-headings-p t)
 #+end_src
 
-#+RESULTS:
-: t
+Show live-preview of latex fragements.
+
+#+begin_src emacs-lisp :tangle yes
+(use-package org-elp)
+#+end_src
+
+Add a company backend for math.
+
+#+begin_src emacs-lisp :tangle yes
+(use-package company-math
+  :after company)
+#+end_src
 
 *** Agenda
 
@@ -1336,11 +1386,28 @@ Make reading stuff in Emacs easier.
   (setq counsel-projectile-switch-project-action 'dired))
 (use-package swiper
   :bind (("C-s" . swiper)))
+(use-package ivy-yasnippet
+  :after (ivy yasnippet))
 #+END_SRC
 
 #+RESULTS:
 : swiper
 
+** HTMLize
+#+begin_src emacs-lisp :tangle yes
+(use-package htmlize)
+#+end_src
+
+** Typescript
+#+begin_src emacs-lisp :tangle yes
+(use-package typescript-mode)
+(use-package tss)
+#+end_src
+
+** Vue
+#+begin_src emacs-lisp :tangle yes
+(use-package vue-mode)
+#+end_src
 ** Magit
 A great interface for git projects.
 It’s much more pleasant to use than the git interface
@@ -1352,16 +1419,18 @@ on the command line. Use an easy keybinding to access magit.
   :bind (("C-c g" . magit-status)
          ("C-c G" . magit-dispatch)
          ("C-c m l" . magit-log-buffer-file)
-         ("C-c m b" . magit-blame))
+         ("C-c m b" . magit-blame)
+         ("C-c m m" . magit-list-repositories))
   :config
   (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
-  (setq magit-diff-refine-hunk t))
-(add-hook 'magit-process-find-password-functions
+  (setq magit-diff-refine-hunk t)
+  (add-hook 'magit-process-find-password-functions
             #'magit-process-password-auth-source)
-(setq magit-repository-directories '(("~/" . 0)
-                                     ("~/.config/" . 1)
-                                     ("~/Code" . 2)
-                                     ("~/.local/src" . 4)))
+  (setq magit-repository-directories '(("~/" . 0)
+                                       ("~/.config/" . 3)
+                                       ("~/Code" . 2)
+                                       ("~/.local/src" . 4)
+                                       ("~/Documents/Knowledge" . 1))))
 #+END_SRC
 
 #+RESULTS:
@@ -1429,6 +1498,11 @@ We do however still need some snippets.
 
 #+RESULTS:
 
+** Ripgrep
+Search through files really fast
+#+begin_src emacs-lisp :tangle yes
+(use-package ripgrep)
+#+end_src
 ** Lisp
 *** SLIME
 Install the [[https://melpa.org/#/slime][Superior Lisp Interaction Mode for Emacs]].
@@ -1590,15 +1664,15 @@ Project management and navigation.
 Auto completion
 
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package company
-    :config
-    (setq company-tooltip-limit 20)
-    (setq company-idle-delay .15)
-    (setq company-echo-delay 0)
-    (setq company-begin-commands '(self-insert-command))
-    (define-key company-active-map (kbd "C-n") #'company-select-next)
-    (define-key company-active-map (kbd "C-p") #'company-select-previous))
-(global-company-mode)
+(use-package company
+  :bind (("C-n" . company-select-next)
+         ("C-p" . company-select-previous))
+  :config
+  (setq company-tooltip-limit 20)
+  (setq company-idle-delay .15)
+  (setq company-echo-delay 0)
+  (setq company-begin-commands '(self-insert-command))
+  (global-company-mode))
 #+END_SRC
 
 #+RESULTS:
@@ -1900,6 +1974,13 @@ ARG is passed to 'save-buffer'"
 (bind-key "C-j j" #'org-roam-find-file)
 
 (bind-key "C-j C-j" #'org-roam-insert)
+
+(defun org-roam-grep-content (regexp)
+  "Use REGEXP to search `org-roam-directory' contents."
+  (interactive "sSearch: ")
+  (ripgrep-regexp regexp org-roam-directory '("-g \"*.org\"")))
+
+(bind-key "C-j g" #'org-roam-grep-content)
 
 (bind-key "C-j b" #'org-roam)
 
