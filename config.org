@@ -1450,6 +1450,10 @@ Make reading stuff in Emacs easier.
   :after typescript-mode)
 #+end_src
 
+** JavaScript
+#+begin_src emacs-lisp :tangle yes
+(setq js-indent-level 2)
+#+end_src
 ** Cakecrumbs
 
 Show parent's chain on header for web-releated files
