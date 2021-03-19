@@ -34,8 +34,7 @@ Set the cusomize file to a separate file.
 : t
 
 
-
-#+begin_src emacs-lisp :tangle yes
+,#+begin_src emacs-lisp :tangle yes
 
 (defun get-repo-for-title ()
   (when buffer-file-name
@@ -1091,10 +1090,10 @@ Set up alerts for agenda items.
 #+begin_src emacs-lisp :tangle yes
 (use-package org-roam
   :config
-(unless (f-dir? "~/Documents/Knowledge")
-  (make-directory "~/Documents/Knowledge"))
-(setq org-roam-directory "~/Documents/Knowledge")
-(setq org-roam-db-location "~/Documents/Knowledge/org-roam.db")
+(unless (f-dir? "~/Documents/Knowledge/src/org")
+  (make-directory "~/Documents/Knowledge/src/org"))
+(setq org-roam-directory "~/Documents/Knowledge/src/org")
+(setq org-roam-db-location "~/Documents/Knowledge/src/org/org-roam.db")
 (setq org-roam-link-auto-replace t)
 (add-hook 'after-init-hook 'org-roam-mode)
 
@@ -1454,6 +1453,24 @@ Make reading stuff in Emacs easier.
 #+begin_src emacs-lisp :tangle yes
 (setq js-indent-level 2)
 #+end_src
+** CSS
+#+begin_src emacs-lisp :tangle yes
+(setq css-indent-offset 2)
+#+end_src
+** SCSS
+#+begin_src emacs-lisp :tangle yes
+(use-package scss-mode)
+(use-package postcss-sorting
+  :after css-mode
+  :quelpa (postcss-sorting
+           :fetcher git
+           :url "https://github.com/P233/postcss-sorting.el.git")
+:config
+(add-hook 'css-mode-hook
+          (lambda ()
+            (add-hook 'before-save-hook 'postcss-sorting-buffer t t))))
+#+end_src
+
 ** Cakecrumbs
 
 Show parent's chain on header for web-releated files
