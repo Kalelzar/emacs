@@ -21,7 +21,7 @@
 #+END_SRC
 * Misc
 
-Set the cusomize file to a separate file.
+Set the customize file to a separate file.
 
 #+BEGIN_SRC emacs-lisp :tangle yes
 
@@ -30,11 +30,9 @@ Set the cusomize file to a separate file.
 (load custom-file)
 #+END_SRC
 
-#+RESULTS:
-: t
 
 
-,#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle yes
 
 (defun get-repo-for-title ()
   (when buffer-file-name
@@ -48,8 +46,8 @@ Set the cusomize file to a separate file.
                                (buffer-file-name)))))))
    "[" "]")))
 
-(setq frame-title-format
-                    '("" "emacs - %b " (:eval (get-repo-for-title))))
+;(setq frame-title-format
+;                    '("" "emacs - %b " (:eval (get-repo-for-title))))
 
 
 
@@ -1376,9 +1374,13 @@ Make reading stuff in Emacs easier.
   :init
   (require 'helm-config)
   :config
+  (helm-mode 1)
   (setq helm-locate-command "mdfind -interpret -name %s %s"
         helm-ff-newfile-prompt-p nil
-        helm-M-x-fuzzy-match t))
+        helm-M-x-fuzzy-match t)
+  :bind (("M-x" . helm-M-x)
+         ("C-c h i" . helm-imenu)
+         ("C-x C-f" . helm-find-files)))
 (use-package helm-projectile
   :after (helm projectile)
   :commands helm-projectile
@@ -1387,11 +1389,13 @@ Make reading stuff in Emacs easier.
   :after helm)
 (use-package helm-swoop
   :after helm
-  :bind ("C-S" . helm-swoop))
+  :bind ("C-s" . helm-swoop)
+  :config
+  (setq helm-swoop-fontify-buffer-size-limit 'always
+                helm-swoop-use-line-number-face t
+                helm-swoop-speed-or-color t))
 #+END_SRC
 
-#+RESULTS:
-: helm-swoop
 
 ** Ivy
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -1401,7 +1405,7 @@ Make reading stuff in Emacs easier.
   (:map ivy-mode-map
         ("C-'" . ivy-avy))
   :config
-  (ivy-mode 1)
+  ;;(ivy-mode 1)
   ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
   (setq ivy-use-virtual-buffers t)
   ;; number of result lines to display
@@ -1428,6 +1432,8 @@ Make reading stuff in Emacs easier.
   (counsel-projectile-mode)
   (setq counsel-projectile-switch-project-action 'dired))
 (use-package swiper
+  :after counsel
+  :unless (helm-mode)
   :bind (("C-s" . swiper)))
 (use-package ivy-yasnippet
   :after (ivy yasnippet))
@@ -2049,7 +2055,7 @@ Change color of mode line when in god-mode
 
 (bind-key "M-y" 'helm-show-kill-ring)
 
-(bind-key "C-x b" 'ivy-switch-buffer)
+(bind-key "C-x b" 'helm-mini)
 
 #+end_src
 
