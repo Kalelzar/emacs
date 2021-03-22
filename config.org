@@ -1185,10 +1185,10 @@ Set up alerts for agenda items.
         org-roam-server-port 7000
         org-roam-server-authenticate nil
         org-roam-server-export-inline-images t
-        org-roam-server-serve-files nil
+        org-roam-server-serve-files t
         org-roam-server-served-file-extensions '("pdf" "mp4" "ogv")
         org-roam-server-network-poll t
-        org-roam-server-network-arrows nil
+        org-roam-server-network-arrows "from"
         org-roam-server-network-label-truncate t
         org-roam-server-network-label-truncate-length 60
         org-roam-server-network-label-wrap-length 20))
@@ -1208,7 +1208,7 @@ Set up alerts for agenda items.
         (completion (string-join roam-subjects "|")))
     `(,key ,name entry #'org-roam--capture-get-point
            "* ${title}\n %?"
-           :file-name "${title}"
+           :file-name "${slug}"
            :head ,(concat "#+title: ${title}\n#+roam_alias: \"${title}\"\n#+roam_tags: \"%^{prompt|General|"
                           completion
                           "}\" \""
@@ -1374,13 +1374,11 @@ Make reading stuff in Emacs easier.
   :init
   (require 'helm-config)
   :config
-  (helm-mode 1)
+  ;;(helm-mode 1)
   (setq helm-locate-command "mdfind -interpret -name %s %s"
         helm-ff-newfile-prompt-p nil
         helm-M-x-fuzzy-match t)
-  :bind (("M-x" . helm-M-x)
-         ("C-c h i" . helm-imenu)
-         ("C-x C-f" . helm-find-files)))
+  :bind ("C-c h i" . helm-imenu))
 (use-package helm-projectile
   :after (helm projectile)
   :commands helm-projectile
@@ -1389,13 +1387,12 @@ Make reading stuff in Emacs easier.
   :after helm)
 (use-package helm-swoop
   :after helm
-  :bind ("C-s" . helm-swoop)
+  :bind ("C-S" . helm-swoop)
   :config
   (setq helm-swoop-fontify-buffer-size-limit 'always
                 helm-swoop-use-line-number-face t
                 helm-swoop-speed-or-color t))
 #+END_SRC
-
 
 ** Ivy
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -1405,7 +1402,7 @@ Make reading stuff in Emacs easier.
   (:map ivy-mode-map
         ("C-'" . ivy-avy))
   :config
-  ;;(ivy-mode 1)
+  (ivy-mode 1)
   ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
   (setq ivy-use-virtual-buffers t)
   ;; number of result lines to display
@@ -1424,7 +1421,11 @@ Make reading stuff in Emacs easier.
          ("C-x C-r" . counsel-recentf)
          ("C-c h i" . counsel-imenu)
          ("C-h v" . counsel-describe-variable)
-         ("C-h f" . counsel-describe-function)))
+         ("C-h f" . counsel-describe-function)
+         ("C-x C-f" . counsel-find-file)
+         ("C-x b" . counsel-switch-buffer)
+         ("M-y" . counsel-yank-pop)
+         ("C-x f" . counsel-fzf)))
 (use-package counsel-projectile
   :after (counsel projectile)
   :config
@@ -1433,7 +1434,6 @@ Make reading stuff in Emacs easier.
   (setq counsel-projectile-switch-project-action 'dired))
 (use-package swiper
   :after counsel
-  :unless (helm-mode)
   :bind (("C-s" . swiper)))
 (use-package ivy-yasnippet
   :after (ivy yasnippet))
@@ -2052,10 +2052,6 @@ Change color of mode line when in god-mode
 (bind-key "C-c a" 'org-agenda)
 
 (bind-key "C-." 'hippie-expand)
-
-(bind-key "M-y" 'helm-show-kill-ring)
-
-(bind-key "C-x b" 'helm-mini)
 
 #+end_src
 
