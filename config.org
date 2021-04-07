@@ -1373,6 +1373,7 @@ Make reading stuff in Emacs easier.
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package helm
   :diminish helm-mode
+  :disabled t
   :init
   (require 'helm-config)
   :config
