@@ -355,6 +355,7 @@ Following config mostly taken from [[https://github.com/bbatsov][bbatsov's]] [[h
 
 (defun prelude-prog-mode-defaults ()
   "Default coding hook, useful with any programming language."
+  (flycheck-mode)
   (flyspell-prog-mode)
   (smartparens-mode +1)
   (prelude-local-comment-auto-fill))
