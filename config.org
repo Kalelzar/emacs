@@ -34,7 +34,8 @@ Set the customize file to a separate file.
 
 #+begin_src emacs-lisp :tangle yes
 
-(defun get-repo-for-title ()
+(defun get-active-file-repo ()
+  "Return the repository of the active file if any."
   (when buffer-file-name
     (s-wrap
    (s-chop-prefix "/"
