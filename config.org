@@ -3,7 +3,7 @@
 
 #+BEGIN_SRC emacs-lisp :tangle yes :exports none
 
-;;; config.el -- Tangled source code of config.org
+;;; config.el -- Tangled source code of config.org -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; This is just an executable file created by pasting
 ;;; all emacs-lisp source code blocks from config.org into
