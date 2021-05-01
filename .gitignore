@@ -40,3 +40,4 @@ quelpa
 .#*
 /.dap-breakpoints
 /.cache/
+emms/mpv-ipc.sock
