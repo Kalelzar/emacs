@@ -1390,6 +1390,7 @@ Make reading stuff in Emacs easier.
   :after helm)
 (use-package helm-swoop
   :after helm
+  :disabled t
   :bind ("C-S" . helm-swoop)
   :config
   (setq helm-swoop-fontify-buffer-size-limit 'always
@@ -1427,10 +1428,10 @@ Make reading stuff in Emacs easier.
          ("C-h f" . counsel-describe-function)
          ("C-x C-f" . counsel-find-file)
          ("C-x b" . counsel-switch-buffer)
-         ("M-y" . counsel-yank-pop)
-         ("C-x f" . counsel-fzf)))
+         ("M-y" . counsel-yank-pop)))
 (use-package counsel-projectile
   :after (counsel projectile)
+  :bind (("C-x f" . counsel-projectile-find-file))
   :config
 ;  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (counsel-projectile-mode)
@@ -1440,6 +1441,20 @@ Make reading stuff in Emacs easier.
   :bind (("C-s" . swiper)))
 (use-package ivy-yasnippet
   :after (ivy yasnippet))
+(use-package ivy-posframe
+  :after (ivy)
+  :disabled t
+  :config
+  (ivy-posframe-mode)
+  (setq ivy-posframe-parameters
+        '((left-fringe . 8)
+          (right-fringe . 8))
+        ivy-posframe-border-width 5
+        ivy-posframe-min-width 480))
+(use-package ivy-rich
+  :diminish (ivy-rich-mode . "")
+  :after (ivy ivy-posframe)
+  :config (ivy-rich-mode 1))
 #+END_SRC
 
 #+RESULTS:
@@ -2281,6 +2296,10 @@ Enable icons in various buffers with [[https://melpa.org/#/all-the-icons][all-th
   (use-package all-the-icons-ivy
     :after (all-the-icons ivy)
     :config (all-the-icons-ivy-setup))
+
+  (use-package all-the-icons-ivy-rich
+    :after (all-the-icons-ivy)
+    :config (all-the-icons-ivy-rich-mode))
 #+end_src
 
 Display tags everywere as fancy svg icons.
