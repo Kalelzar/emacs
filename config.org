@@ -1428,10 +1428,10 @@ Make reading stuff in Emacs easier.
          ("C-h f" . counsel-describe-function)
          ("C-x C-f" . counsel-find-file)
          ("C-x b" . counsel-switch-buffer)
-         ("M-y" . counsel-yank-pop)))
+         ("M-y" . counsel-yank-pop)
+         ("C-x f" . counsel-fzf)))
 (use-package counsel-projectile
   :after (counsel projectile)
-  :bind (("C-x f" . counsel-projectile-find-file))
   :config
 ;  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (counsel-projectile-mode)
