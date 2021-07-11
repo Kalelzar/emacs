@@ -565,14 +565,13 @@ Enable flyspell
 #+RESULTS:
 : flyspell-correct-word-before-point
 ** Org
-
 Fetch the latest version of org mode as per [[http://orgmode.org/elpa.html][this instructions]].
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package org
   :ensure org-plus-contrib)
 #+END_SRC
 
-#+RESULTS:
+#+R ESULTS:
 
 *** Babel
 
@@ -598,20 +597,38 @@ Enable some languages for evaluation in Org code blocks.
 
 #+RESULTS:
 
-*** Export
+*** COMMENT Export
 
 I mainly export to \LaTeX but that comes installed by default.
 
 #+RESULTS:
 
 #+begin_src emacs-lisp :tangle yes
-  (setq org-export-backends
-     (quote
-      (html latex)))
+(setq org-export-backends
+      (quote
+       (html latex)))
 #+end_src
 
 #+RESULTS:
 | ascii | beamer | html | latex | epub |
+
+#+begin_src emacs-lisp :tangle yes
+(defun org-export-as-pdf (filename)
+  "Export org-file FILENAME as pdf."
+  (with-current-buffer (find-file-noselect filename)
+    (org-mode)
+    (org-latex-export-to-pdf)))
+
+(defun org-export-as-epub (filename)
+  "Export org-file FILENAME as epub."
+  (with-current-buffer (find-file-noselect filename)
+    (org-mode)
+    (org-epub-export-to-epub)))
+#+end_src
+
+#+RESULTS:
+: org-export-as-epub
+
 
 Enable linting of source code blocks when exported to \LaTeX
 This requires [[https://github.com/gpoore/minted][minted]].
