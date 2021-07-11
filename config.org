@@ -571,8 +571,6 @@ Fetch the latest version of org mode as per [[http://orgmode.org/elpa.html][this
   :ensure org-plus-contrib)
 #+END_SRC
 
-#+R ESULTS:
-
 *** Babel
 
 Don't ask for confirmation when evaluating code blocks.
@@ -597,7 +595,7 @@ Enable some languages for evaluation in Org code blocks.
 
 #+RESULTS:
 
-*** COMMENT Export
+*** Export
 
 I mainly export to \LaTeX but that comes installed by default.
 
@@ -609,8 +607,6 @@ I mainly export to \LaTeX but that comes installed by default.
        (html latex)))
 #+end_src
 
-#+RESULTS:
-| ascii | beamer | html | latex | epub |
 
 #+begin_src emacs-lisp :tangle yes
 (defun org-export-as-pdf (filename)
@@ -625,10 +621,6 @@ I mainly export to \LaTeX but that comes installed by default.
     (org-mode)
     (org-epub-export-to-epub)))
 #+end_src
-
-#+RESULTS:
-: org-export-as-epub
-
 
 Enable linting of source code blocks when exported to \LaTeX
 This requires [[https://github.com/gpoore/minted][minted]].
@@ -2144,7 +2136,6 @@ ARG is passed to 'save-buffer'"
 (bind-key "C-j b" #'org-roam)
 
 #+end_src
-
 * User Interface
 
 I do enjoy myself a good looking user interface.
