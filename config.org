@@ -80,7 +80,10 @@ but it *is* hard for me to justify it.
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package lsp-mode
   :commands lsp
-  :hook ((c++-mode scala-mode) . #'lsp))
+  :hook ((c++-mode scala-mode) . (lambda ()
+                                     (lsp)
+                                     (lsp-semantic-tokens-mode)
+                                     (lsp-treemacs-sync-mode))))
 (use-package lsp-ui
   :commands lsp-ui-mode
   :after lsp)
@@ -1247,12 +1250,21 @@ We also need the [[https://melpa.org/#/ccls][emacs package]].
 
 #+begin_src emacs-lisp :tangle yes
 (use-package ccls
+  :disabled t
   :hook ((c-mode c++-mode objc-mode cuda-mode) .
          (lambda ()
            (ccls-code-lens-mode))))
 
 (setq ccls-executable "/usr/bin/ccls")
+(use-package lsp-clangd
+  :after lsp)
+
+(setq lsp-clangd-binary-path "/usr/bin/clangd")
+(setq lsp-disabled-clients '(ccls))
+
 #+end_src
+
+
 
 #+RESULTS:
 : /usr/bin/ccls
@@ -1942,6 +1954,12 @@ It should also be available as a git submodule of my .emacs.d repo
 (use-package json-mode)
 #+end_src
 
+** Kotlin
+#+begin_src emacs-lisp :tangle yes
+(use-package kotlin-mode)
+(use-package flycheck-kotlin)
+(use-package flymake-ktlint)
+#+end_src
 ** Centered Window Mode
 #+begin_src emacs-lisp :tangle yes
 ;(use-package centered-window-mode)
