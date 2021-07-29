@@ -1274,6 +1274,15 @@ Enable some refactoring with [[https://melpa.org/#/srefactor][srefactor]].
 #+begin_src emacs-lisp :tangle yes
   (use-package srefactor
     :after ccls)
+
+(use-package clang-format
+  :hook
+  (((c-mode c++-mode) . #'clang-format-buffer)
+   ((after-save) . (lambda ()
+                     (when c-buffer-is-cc-mode
+                            (clang-format-buffer))))))
+
+
 #+end_src
 
 #+RESULTS:
