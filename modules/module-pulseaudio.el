@@ -276,7 +276,8 @@ _q_: Quit"
       (pulseaudio-control-toggle-sink-input-mute-by-index id)
     (pulseaudio-control-toggle-current-sink-mute)))
 
-(setq posframe-mouse-banish-function #'posframe-mouse-banish-simple)
+;(setq posframe-mouse-banish-function #'posframe-mouse-banish-simple)
+
 
 
 
