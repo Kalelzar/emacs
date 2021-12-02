@@ -28,10 +28,12 @@
 
 (use-package exwm
   :after consult
+  :demand t
   :config
-;; Set the initial workspace number.
-(unless (get 'exwm-workspace-number 'saved-value)
-  (setq exwm-workspace-number 9))
+  ;; Set the initial workspace number.
+  (unless (get 'exwm-workspace-number 'saved-value)
+    (setq exwm-workspace-number 9)))
+
 (defface exwm-alert-face
   '((default . '(:height 1.6)))
   "A face for alerts shown by `posframe' in `exwm'.")
@@ -61,9 +63,7 @@ Run 'man date' for more details.")
 ;; Make class name the buffer name
 (add-hook 'exwm-update-title-hook
           (lambda ()
-            (exwm-workspace-rename-buffer exwm-title)))
-
-;; Global keybindings.
+            (exwm-workspace-rename-buffer exwm-title)));; Global keybindings.
 (unless (get 'exwm-input-global-keys 'saved-value)
   (setq exwm-input-global-keys
         `(
@@ -73,6 +73,12 @@ Run 'man date' for more details.")
           ([?\H-:] . (lambda (command)
                        (interactive (list (read-shell-command "$ ")))
                        (start-process-shell-command command nil command)))
+          ([?\H-=] . pulseaudio-control-inc-dwim)
+          ([?\H--] . pulseaudio-control-dec-dwim)
+          ([?\H-m] . pulseaudio-control-mute-dwim)
+          ([?\H-M] . pulseaudio-control-toggle-sink-input-mute-by-index)
+          ([?\H-d] . pulseaudio-sink-input-hydra/body)
+          ([?\H-a ?\a] . exwm-show-time)
           ;; 'H-N': Switch to certain workspace.
           ,@(mapcar (lambda (i)
                       `(,(kbd (format "H-%d" i)) .
