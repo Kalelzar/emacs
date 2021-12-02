@@ -16,6 +16,8 @@
 (use-package windmove
   :init (windmove-default-keybindings))
 
+(use-package org :pin gnu)
+(use-package org-contrib)
 ;; Enable vertico
 (use-package vertico
   :init
