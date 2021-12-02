@@ -70,7 +70,7 @@ Run 'man date' for more details.")
           ;; 's-r': Reset (to line-mode).
           ([?\s-r] . exwm-reset)
           ;; 'H-:': Launch application.
-          ([?\H-:] . (lambda (command)a
+          ([?\H-:] . (lambda (command)
                        (interactive (list (read-shell-command "$ ")))
                        (start-process-shell-command command nil command)))
           ;; 'H-N': Switch to certain workspace.
@@ -109,7 +109,8 @@ Run 'man date' for more details.")
 (add-to-list 'consult-buffer-sources 'exwm-buffer-source)
 
 (exwm-enable)
-(fringe-mode 10))
+
+(fringe-mode 10)
 
 (provide 'module-exwm)
 ;;; module-exwm.el ends here
