@@ -264,7 +264,7 @@ targets."
   :ensure t
   :after corfu
   :custom
-  (kind-icon-default-face 'corfu-background) ; to compute blended backgrounds correctly
+  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
