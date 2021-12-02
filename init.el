@@ -335,5 +335,7 @@ targets."
 
 
 (require 'module-bluetooth)
+(require 'module-firefox)
+(require 'module-pulseaudio)
 (require 'module-exwm-quicklaunch)
 (require 'module-exwm)
