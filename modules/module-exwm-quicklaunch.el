@@ -14,7 +14,8 @@
 
 (defcustom exwm-quicklaunch-alist
   '(("Firefox" . "firefox")
-    ("Web search" . "firefox --search \"$(ex-read-string 'Search: ')\""))
+    ("Web search" . "firefox --search \"$(ex-read-string 'Search: ')\"")
+    ("Mirror Android Screen" . "scrcpy -m1920"))
   "A associative list of commands to use for quickly launching X apps in EXWM.
 
 Each element of the alist has the form (KEY . VALUE) where KEY and VALUE are STRING.
