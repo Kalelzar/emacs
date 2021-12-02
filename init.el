@@ -18,6 +18,7 @@
 
 (use-package org :pin gnu)
 (use-package org-contrib)
+
 ;; Enable vertico
 (use-package vertico
   :init
@@ -147,7 +148,9 @@
 
   ;; Must be in the :init section of use-package such that the mode gets
   ;; enabled right away. Note that this forces loading the package.
-  (marginalia-mode))
+  (marginalia-mode)
+  :config
+  (add-to-list 'marginalia-prompt-categories '("\\<buffer[s]?\\>" . buffer)))
 
 (use-package corfu :ensure t
   ;; Optional customizations
