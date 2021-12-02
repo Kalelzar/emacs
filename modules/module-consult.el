@@ -23,6 +23,8 @@
 
 (require 'use-package)
 
+
+
 (use-package consult
   ;; Replace bindings.
   :bind (;; C-c bindings (mode-specific-map)
@@ -102,8 +104,7 @@
    consult-theme
    :preview-key '(:debounce 0.2 any)
    consult-ripgrep consult-git-grep consult-grep
-   consult-bookmark consult-recent-file consult-xref
-   consult--source-recent-file consult--source-project-recent-file consult--source-bookmark
+   consult-bookmark consult-recent-file consult-xref consult--source-project-recent-file consult--source-bookmark
    :preview-key (kbd "M-."))
 
   (setq consult-narrow-key (kbd "<")) ;; (kbd "C-+")
@@ -113,10 +114,21 @@
   (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
 
   (advice-add #'completing-read-multiple
-            :override #'consult-completing-read-multiple)
-   (autoload 'projectile-project-root "projectile")
-   (setq consult-project-root-function #'projectile-project-root))
+              :override #'consult-completing-read-multiple)
+  (autoload 'projectile-project-root "projectile")
+  (setq consult-project-root-function #'projectile-project-root)
+)
 
+(defun consult-kill-buffers-interactively ()
+  "Kill multiple buffers using `completing-read-multiple'."
+  (interactive)
+  (when-let* ((buffers-to-kill (completing-read-multiple "Kill buffer: " (consult--buffer-query :sort 'alpha
+                                                                                                 :as #'buffer-name)
+                                                         nil
+                                                         t))
+              (killed-buffers-count (count t (mapcar #'kill-buffer buffers-to-kill))))
+    (message "Successfully deleted %d buffers." killed-buffers-count)))
+(bind-key "k" #'consult-kill-buffers-interactively ctl-x-map)
 
 (with-eval-after-load 'consult
 (autoload 'org-buffer-list "org")
