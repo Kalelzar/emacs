@@ -9,7 +9,9 @@
 
 (use-package which-key
   :init (which-key-mode)
-  :diminish which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-allow-imprecise-window-fit nil))
 
 (use-package windmove
   :init (windmove-default-keybindings))
