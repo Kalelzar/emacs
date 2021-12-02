@@ -32,6 +32,31 @@
 ;; Set the initial workspace number.
 (unless (get 'exwm-workspace-number 'saved-value)
   (setq exwm-workspace-number 9))
+(defface exwm-alert-face
+  '((default . '(:height 1.6)))
+  "A face for alerts shown by `posframe' in `exwm'.")
+
+(defvar exwm-datetime-format "+     %H:%M\n%a %b %+2d %+4Y"
+  "A date formatted as it would be in the POSIX date utility.
+Run 'man date' for more details.")
+
+(defun exwm-show-time ()
+  (interactive)
+  (exwm-show-alert (shell-command-to-string (concat "date '"
+                                                    exwm-datetime-format
+                                                    "'"))))
+
+(defun exwm-show-alert (msg)
+  (interactive
+   (list (read-string "Message: ")))
+  (posframe-show " *Alert*"
+                 :string (propertize msg 'face 'exwm-alert-face)
+                 :poshandler #'posframe-poshandler-window-center
+                 :border-width 1
+                 :left-fringe 3
+                 :right-fringe 3
+                 :background-color "#68217A"
+                 :timeout 4))
 
 ;; Make class name the buffer name
 (add-hook 'exwm-update-title-hook
