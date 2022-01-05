@@ -1,4 +1,4 @@
-;;; newemacs.el --- PL -*- lexical-binding: t; -*-
+;;; init.el --- PL -*- lexical-binding: t; -*-
 ;;; Setup MELPA
 
 (add-to-list 'load-path (concat user-emacs-directory "modules"))
@@ -342,3 +342,5 @@ targets."
 (require 'module-pulseaudio)
 (require 'module-exwm-quicklaunch)
 (require 'module-exwm)
+
+(provide 'init)
