@@ -343,4 +343,8 @@ targets."
 (require 'module-exwm-quicklaunch)
 (require 'module-exwm)
 
+(use-package pinentry)
+(pinentry-start)
+
 (provide 'init)
+
