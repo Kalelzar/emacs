@@ -58,7 +58,23 @@ Run 'man date' for more details.")
                  :left-fringe 3
                  :right-fringe 3
                  :background-color "#68217A"
-                 :timeout 4))
+                 :timeout 4
+                 :refposhandler #'posframe-refposhandler-xwininfo))
+
+(defun exwm-show-msg (msg)
+  (interactive
+   (list (read-string "Message: ")))
+  (posframe-show " *Alert*"
+                 :string msg
+                 :poshandler #'posframe-poshandler-window-center
+                 :border-width 1
+                 :left-fringe 3
+                 :right-fringe 3
+                 :background-color "#68217A"
+                 :timeout 4
+                 :refposhandler #'posframe-refposhandler-xwininfo))
+
+(setq posframe-mouse-banish-function #'posframe-mouse-banish-simple)
 
 ;; Make class name the buffer name
 (add-hook 'exwm-update-title-hook
@@ -78,7 +94,7 @@ Run 'man date' for more details.")
           ([?\H-m] . pulseaudio-control-mute-dwim)
           ([?\H-M] . pulseaudio-control-toggle-sink-input-mute-by-index)
           ([?\H-d] . pulseaudio-sink-input-hydra/body)
-          ([?\H-a ?\a] . exwm-show-time)
+          ([?\H-a] . exwm-show-time)
           ;; 'H-N': Switch to certain workspace.
           ,@(mapcar (lambda (i)
                       `(,(kbd (format "H-%d" i)) .
