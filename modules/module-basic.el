@@ -43,7 +43,23 @@
       shell-command-switch "-ic"
       visible-bell t
       ring-bell-function 'ignore
-      custom-safe-themes t)
+      custom-safe-themes t
+      read-process-output-max (* 1024 1024 4)
+      display-time-format "[%H:%M %b %d]"
+      display-time-string-forms '((if
+                                      (and
+                                       (not display-time-format)
+                                       display-time-day-and-date)
+                                      (format-time-string "%a %b %e " now)
+                                    #1="")
+                                  (propertize
+                                   (format-time-string
+                                    (or display-time-format
+                                        (if display-time-24hr-format "%H:%M" "%-I:%M%p"))
+                                    now)
+                                   'help-echo
+                                   (format-time-string "%a %b %e, %Y" now))))
+
 
 (setq-default indent-tabs-mode nil
 	      indicate-empty-lines t)
