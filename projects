@@ -1,2 +1,5 @@
 ;;; -*- lisp-data -*-
-(("~/.config/emacs/"))
+(("~/Code/cpp/Alpackage/")
+ ("~/.local/src/natalie/")
+ ("~/")
+ ("~/.config/emacs/"))
