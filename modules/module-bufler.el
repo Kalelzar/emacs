@@ -29,7 +29,8 @@
 
 (use-package bufler
   :after consult
-  :config
+  :demand t
+  :init
 
   (defun bufler-disable-workspace ()
     "Reset the `frame-parameters' `bufler-workspace-path' and `bufler-workspace-path-formatted' to nil."
@@ -57,20 +58,19 @@
 
   (add-to-list 'consult-buffer-sources 'consult--bufler-workspace+)
 
-  (with-eval-after-load 'exwm
-    (setq consult--source-buffer
-          `(:name     "Buffer"
-                      :narrow   ?b
-                      :category buffer
-                      :face     consult-buffer
-                      :history  buffer-name-history
-                      :state    ,#'consult--buffer-state
-                      :default  t
-                      :enabled ,(lambda () (not (frame-parameter nil 'bufler-workspace-path)))
-                      :items
-                      ,(lambda () (consult--buffer-query :sort 'alpha
-                                                         :predicate (lambda (buffer) (not (eq 'exwm-mode (buffer-local-value 'major-mode buffer))))
-                                                         :as #'buffer-name))))))
+  (setq consult--source-buffer
+        `(:name     "Buffer"
+                    :narrow   ?b
+                    :category buffer
+                    :face     consult-buffer
+                    :history  buffer-name-history
+                    :state    ,#'consult--buffer-state
+                    :default  t
+                    :enabled ,(lambda () (not (frame-parameter nil 'bufler-workspace-path)))
+                    :items
+                    ,(lambda () (consult--buffer-query :sort 'alpha
+                                                       :predicate (lambda (buffer) (not (eq 'exwm-mode (buffer-local-value 'major-mode buffer))))
+                                                       :as #'buffer-name)))))
 
 (provide 'module-bufler)
 ;;; module-bufler.el ends here
