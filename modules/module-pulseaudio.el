@@ -74,7 +74,8 @@
    (list
     (pulseaudio-read-sink-input)))
   
-  (pulseaudio-control--set-sink-input-mute index "toggle"))
+  (pulseaudio-control--set-sink-input-mute index "toggle")
+  (pulseaudio-control--maybe-print-sink-input-status index))
 
 (add-to-list 'marginalia-prompt-categories '("\\Sink input\\>" . sink-input))
 
@@ -99,8 +100,8 @@
       (pulseaudio-control--call-pactl "list sink-inputs")
       (goto-char (point-min))
       (search-forward (concat "Sink Input #" id))
-      (search-forward-regexp (format "%s\\(:\\| =\\)" prop))
-      (backward-word)
+      (search-forward-regexp (format "%s\\(:\\| =\\)" (regexp-quote prop)))
+      (beginning-of-line-text)
       (setq beg (point))
       (move-end-of-line nil)
       (buffer-substring beg (point)))))
@@ -132,7 +133,84 @@
              100)
       (pulseaudio-control--call-pactl (concat "set-sink-input-volume "
                                               id
-                                              " 100%")))))
+                                              " 100%")))
+    (pulseaudio-control--maybe-print-sink-input-status id)))
+
+(defun pulseaudio-control--maybe-print-sink-input-status (id)
+  (when pulseaudio-control-volume-verbose
+    (let* ((volume (reduced-volume-of-sink-input id))
+           (header (format "[%3d%%]" volume))
+           (width (min (- (frame-width) (length header)) (round (frame-width) 2))))
+      (exwm-show-msg (format "%s\n%s\n%s"
+                             (cl-second (s-match ".* = \"\\(.*\\)\"$" (pulseaudio-control--get-sink-input-prop id "media.name")))
+                             (if (string= (pulseaudio-control--get-sink-input-mute id)
+                                          "Not Muted")
+                                 (make-progress-bar volume
+                                                    :width width
+                                                    :label header)
+                               (make-progress-bar volume
+                                                  :width width
+                                                  :fill-face 'error
+                                                  :left-face 'success
+                                                  :label header))
+                             (pulseaudio-control-format-volume)
+                             )))))
+
+(defun pulseaudio-control-format-volume ()
+  "Format volume of currently-selected Pulse sink."
+  (interactive)
+  (let* ((volumes (cdr (s-match ".*?\\([0-9]+\\)%.*?\\([0-9]+\\)%.*"
+                               (pulseaudio-control--get-current-volume))))
+bv        (volume (cl-destructuring-bind (left right) volumes
+                  (round (+ (string-to-number left) (string-to-number right)) 2)))
+	(mute (string= "Mute: yes" (pulseaudio-control--get-current-mute)))
+        (header (format "[%3d%%]" volume))
+        (width (min (- (frame-width) (length header)) (round (frame-width) 2))))
+    (if (string= (car volumes) (cadr volumes))
+        (format "%s"
+                (if mute
+                    (make-progress-bar volume
+                                       :width width
+                                       :fill-face 'error
+                                       :left-face 'success
+                                       :label header)
+                  (make-progress-bar volume
+                                     :width width
+                                     :label header)))
+      (format "%s\n L: %s\n R: %s"
+              (if mute
+                  (make-progress-bar volume
+                                     :width width
+                                     :fill-face 'error
+                                     :left-face 'success
+                                     :label header)
+                (make-progress-bar volume
+                                   :width width
+                                   :label header))
+              (if mute
+                  (make-progress-bar (string-to-number (car volumes))
+                                     :width (- width 4)
+                                     :fill-face 'error
+                                     :left-face 'success
+                                     :label (format "[%3d%%]" (string-to-number (car volumes))))
+                (make-progress-bar (string-to-number (car volumes))
+                                   :width (- width 4)
+                                   :label (format "[%3d%%]" (string-to-number (car volumes)))))
+              (if mute
+                  (make-progress-bar (string-to-number (cadr volumes))
+                                     :width (- width 4)
+                                     :fill-face 'error
+                                     :left-face 'success
+                                     :label (format "[%3d%%]" (string-to-number (cadr volumes))))
+                (make-progress-bar (string-to-number (cadr volumes))
+                                   :width (- width 4)
+                                   :label (format "[%3d%%]" (string-to-number (cadr volumes))))))
+      )
+    ))
+
+
+(defun pulseaudio-control-display-volume ()
+  (exwm-show-msg (pulseaudio-control-format-volume)))
 
 (defun pulseaudio-control--set-sink-input-volume (id volume)
   "Set VOLUME of the sink-input ID.
@@ -176,13 +254,14 @@ Argument VOLUME is the volume provided by the user."
                                 (to 100.0)
                                 (ascii nil)
                                 (width "")
-                                (show-label t)
-                                (label-format "[%d%%]"))
+                                (label nil)
+                                (fill-face 'success)
+                                (left-face 'error))
   (let* ((chars
          (cond
           ((numberp width) width)
           ((stringp width) (max (- (frame-width) (length width)) 0))))
-         (percentage-fill-unrounded (* 100 (/ (- value from) (- to from))))
+         (percentage-fill-unrounded (* 100.0 (/ (* 1.0 (- value from)) (- to from))))
          (percentage-fill (round percentage-fill-unrounded))
          (progress-per-char (/ 100.0 chars))
          (chars-of-max-progress (floor percentage-fill-unrounded progress-per-char))
@@ -195,13 +274,23 @@ Argument VOLUME is the volume provided by the user."
            (s-repeat (- chars chars-of-max-progress 1) (get-best-fill 0 fills))
            )
           )
-      (let ((fills '((100 . "█") (75 . "▓") (50 . "▒") (25 . "░") (0 . "-"))))
-        (concat
-           (s-repeat chars-of-max-progress (get-best-fill 1 fills))
-           (unless  (/ leftover-progress progress-per-char) (get-best-fill (/ leftover-progress progress-per-char) fills))
-           (s-repeat (- chars chars-of-max-progress 1) (get-best-fill 0 fills))
-           ))
-      )))
+      (let* ((fills '((100 . "█") (75 . "▓") (50 . "▒") (25 . "░") (0 . "-")))
+             (full-part (propertize (s-repeat chars-of-max-progress (get-best-fill 1 fills)) 'face fill-face))
+             (partial (when (> leftover-progress 0) (propertize (get-best-fill (/ leftover-progress progress-per-char) fills) 'face fill-face)))
+             (left (propertize (s-repeat (- chars chars-of-max-progress (if (> (length partial) 0) 1 0)) (get-best-fill 0 fills)) 'face left-face))
+             (bar (concat
+                   full-part
+                   partial
+                   left)))
+        (if (null label)
+            bar
+          (let ((n (floor (- chars (length label)) 2)))
+            (concat
+             (s-left  n bar)
+             (propertize (s-left (max 0 (- chars-of-max-progress n)) label) 'face `(:inherit ,fill-face :inverse-video t :background "#000"))
+             (propertize (s-right (max 0(- (length label) (- chars-of-max-progress n))) label) 'face left-face)
+             (s-right n bar))))
+))))
 
 (defun reduced-volume-of-sink-input (id)
   (let* ((volume-pair (--reduce
