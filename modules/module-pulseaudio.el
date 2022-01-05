@@ -293,15 +293,22 @@ Argument VOLUME is the volume provided by the user."
 ))))
 
 (defun reduced-volume-of-sink-input (id)
-  (let* ((volume-pair (--reduce
-                (cons (+ (car it) (car acc)) (+ (cdr it) (cdr acc)))
-                (-zip-fill 1
-                           (--map (string-to-number (s-replace "%" "" it))
-                                  (split-string (pulseaudio-control--get-sink-input-volume id)
-                                                " "))
-                           '())))
-        (volume (/ (car volume-pair)
-                   (cdr volume-pair))))
+  (let* ((volume-pair
+          (-some--> (pulseaudio-control--get-sink-input-volume id)
+            (split-string it " ")
+            (--map (--> it
+                        (s-replace "%" "" it)
+                        (string-to-number it))
+                   it)
+            (-zip-fill 1
+                       it
+                       '())
+            (--reduce
+             (cons (+ (car it) (car acc))
+                   (+ (cdr it) (cdr acc)))
+             it)))
+         (volume (/ (car volume-pair)
+                    (cdr volume-pair))))
     volume))
 
 (defun sink-input-volume-bar ()
@@ -365,10 +372,7 @@ _q_: Quit"
   (if-let ((id (exwm-buffer-if-media-source-get-id)))
       (pulseaudio-control-toggle-sink-input-mute-by-index id)
     (pulseaudio-control-toggle-current-sink-mute)))
-
-;(setq posframe-mouse-banish-function #'posframe-mouse-banish-simple)
-
-
+      
 
 
 (provide 'module-pulseaudio)
