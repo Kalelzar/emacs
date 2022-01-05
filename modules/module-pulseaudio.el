@@ -31,10 +31,11 @@
 
 
 (use-package pulseaudio-control
+  :demand t
   :bind
-  (("H-=" . pulseaudio-control-increase-volume)
-   ("H--" . pulseaudio-control-decrease-volume)
-   ("H-m" . pulseaudio-control-toggle-current-sink-mute)
+  (("H-=" . pulseaudio-control-inc-dwim)
+   ("H--" . pulseaudio-control-dec-dwim)
+   ("H-m" . pulseaudio-control-mute-dwim)
    ("H-M" . pulseaudio-control-toggle-sink-input-mute-by-index)
    ("H-d" . pulseaudio-sink-input-hydra/body))
   :config
