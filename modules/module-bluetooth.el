@@ -76,6 +76,7 @@
       ((string= type "audio-headset") (all-the-icons-material "headset_mic"))
       ((string= type "audio-headphones") (all-the-icons-material "headset"))
       ((string= type "phone") (all-the-icons-material "smartphone"))
+      ((string= type "input-mouse") (all-the-icons-material "mouse"))
       )
      " ")))
 
