@@ -317,35 +317,39 @@ targets."
   ;; Enable recursive minibuffers
   (setq enable-recursive-minibuffers t))
 
-(defun marginalia-annotate-exwm-buffer (cand)
-  (when-let (buffer (get-buffer cand))
-    (with-current-buffer buffer
-      (marginalia--fields
-       ((propertize (format "%s" exwm-class-name) 'display '(:align-to left)) :truncate (/ marginalia-truncate-width 8))
-       ((propertize " " 'display '(space :align-to center)))
-       ((format "Workspace: %d " exwm--desktop))))))
+(with-eval-after-load 'exwm
+  (defun marginalia-annotate-exwm-buffer (cand)
+    (when-let (buffer (get-buffer cand))
+      (with-current-buffer buffer
+        (marginalia--fields
+         ((propertize (format "%s" exwm-class-name) 'display '(:align-to left)) :truncate (/ marginalia-truncate-width 8))
+         ((propertize " " 'display '(space :align-to center)))
+         ((format "Workspace: %d " exwm--desktop))))))
 
-(defun marginalia-annotate-buffer (cand)
-  "Annotate buffer CAND with modification status, file name and major mode."
-  (when-let (buffer (get-buffer cand))
-    (if (eq (buffer-local-value 'major-mode buffer) 'exwm-mode)
-        (marginalia-annotate-exwm-buffer cand)      
-      (marginalia--fields
-       ((marginalia--buffer-status buffer))
-       ((marginalia--buffer-file buffer)
-        :truncate (/ marginalia-truncate-width 2)
-        :face 'marginalia-file-name)))))
+  (defun marginalia-annotate-buffer (cand)
+    "Annotate buffer CAND with modification status, file name and major mode."
+    (when-let (buffer (get-buffer cand))
+      (if (eq (buffer-local-value 'major-mode buffer) 'exwm-mode)
+          (marginalia-annotate-exwm-buffer cand)      
+        (marginalia--fields
+         ((marginalia--buffer-status buffer))
+         ((marginalia--buffer-file buffer)
+          :truncate (/ marginalia-truncate-width 2)
+          :face 'marginalia-file-name))))))
 
 
-(require 'module-bluetooth)
-(require 'module-firefox)
-(require 'module-pulseaudio)
-(require 'module-playerctl)
-(require 'module-exwm-quicklaunch)
-(require 'module-exwm)
 
-(use-package pinentry)
-(pinentry-start)
+(when (eql system-type 'gnu/linux)
+  (require 'module-bluetooth)
+  (require 'module-firefox)
+  (require 'module-pulseaudio)
+  (require 'module-playerctl)
+  (require 'module-exwm-quicklaunch)
+  (require 'module-exwm)
+
+  (use-package pinentry)
+  (pinentry-start))
+
 
 (provide 'init)
 
