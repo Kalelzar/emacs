@@ -98,12 +98,20 @@
          (sink-input (alist-get cand-id (pulseaudio-control--get-sink-inputs) nil nil #'string=)))
     (marginalia--fields
      ((alist-get "Mute" sink-input nil nil #'string=) :truncate 3)
+     ((pulseaudio-control--get-sink-input-active cand-id) :truncate 8)
      ((pulseaudio-volume-as-percentage (alist-get "Volume" sink-input nil nil #'string=)) :truncate 9)
      ((alist-get "application.name" sink-input "unknown" nil #'string=)
       :truncate 20))))
 
+
+
 (add-to-list 'marginalia-annotator-registry '(sink-input marginalia-annotate-sink-input builtin none))
 
+(defun pulseaudio-control--get-sink-input-active (id)
+  (when-let (val (cl-second (s-split-words (pulseaudio-control--get-sink-input-prop id "Corked"))))
+    (cond  
+     ((string= val "yes") "inactive")
+     ((string= val "no") "active"))))
 
 (defun pulseaudio-volume-as-percentage (volume-string)
   (s-join " " (s-match "\\([0-9]+%\\)" volume-string)))
