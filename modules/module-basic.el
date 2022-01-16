@@ -116,5 +116,12 @@
   (defun find-module (module)
     (interactive (list (pick-module)))
     (find-file-existing module)))
+
+(use-package super-save
+  :init (super-save-mode))
+
+(use-package winner
+  :init (winner-mode))
+
 (provide 'module-basic)
 ;;; module-basic.el ends here
