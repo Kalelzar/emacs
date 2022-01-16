@@ -32,7 +32,7 @@
   :config
   ;; Set the initial workspace number.
   (unless (get 'exwm-workspace-number 'saved-value)
-    (setq exwm-workspace-number 9)))
+    (setq exwm-workspace-number 1)))
 
 (defface exwm-alert-face
   '((default . '(:height 1.6)))
