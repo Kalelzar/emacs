@@ -105,5 +105,16 @@
   :init
   (doom-modeline-mode))
 
+(with-eval-after-load 'consult
+  (defun pick-module ()
+    (when-let (modules (f-entries (f-join user-emacs-directory "modules")
+                                  #'(lambda (entry) (message entry)
+                                      (f-ext? entry "el"))))
+      (consult--read modules
+                     :prompt "Module: "
+                     :category 'file)))
+  (defun find-module (module)
+    (interactive (list (pick-module)))
+    (find-file-existing module)))
 (provide 'module-basic)
 ;;; module-basic.el ends here
