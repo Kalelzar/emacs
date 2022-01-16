@@ -44,6 +44,20 @@
         pulseaudio-control--volume-maximum '(("percent" . 100) ("decibels" . 10) ("raw" . 98000)))
   (pulseaudio-control-default-keybindings))
 
+(defun pulseaudio-control--get-current-description ()
+  "Get description of currently-selected sink."
+  (let (beg)
+    (pulseaudio-control--maybe-update-current-sink)
+    (with-temp-buffer
+      (pulseaudio-control--call-pactl "list sinks")
+      (goto-char (point-min))
+      (search-forward (concat "Sink #" pulseaudio-control--current-sink))
+      (search-forward "Description: ")
+      (setq beg (point))
+      (move-end-of-line nil)
+      (buffer-substring beg (point)))))
+
+
 (defun pulseaudio-read-sink-input ()
   (interactive)
   (let* ((valid-sink-inputs (pulseaudio-control--get-sink-inputs))
@@ -169,7 +183,8 @@ bv        (volume (cl-destructuring-bind (left right) volumes
         (header (format "[%3d%%]" volume))
         (width (min (- (frame-width) (length header)) (round (frame-width) 2))))
     (if (string= (car volumes) (cadr volumes))
-        (format "%s"
+        (format "%s\n%s"
+                (pulseaudio-control--get-current-description)
                 (if mute
                     (make-progress-bar volume
                                        :width width
@@ -179,7 +194,8 @@ bv        (volume (cl-destructuring-bind (left right) volumes
                   (make-progress-bar volume
                                      :width width
                                      :label header)))
-      (format "%s\n L: %s\n R: %s"
+      (format "%s\n%s\n L: %s\n R: %s"
+              (pulseaudio-control--get-current-description)
               (if mute
                   (make-progress-bar volume
                                      :width width
