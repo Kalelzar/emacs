@@ -154,7 +154,9 @@
                                                   :left-face 'success
                                                   :label header))
                              (pulseaudio-control-format-volume)
-                             )))))
+                             )
+                     :center t
+                     ))))
 
 (defun pulseaudio-control-format-volume ()
   "Format volume of currently-selected Pulse sink."
@@ -210,7 +212,9 @@ bv        (volume (cl-destructuring-bind (left right) volumes
 
 
 (defun pulseaudio-control-display-volume ()
-  (exwm-show-msg (pulseaudio-control-format-volume)))
+  (if-let ((id (exwm-buffer-if-media-source-get-id)))
+      (pulseaudio-control--maybe-print-sink-input-status id)
+  (exwm-show-msg (pulseaudio-control-format-volume) :center t)))
 
 (defun pulseaudio-control--set-sink-input-volume (id volume)
   "Set VOLUME of the sink-input ID.

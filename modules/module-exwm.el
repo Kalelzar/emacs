@@ -61,18 +61,22 @@ Run 'man date' for more details.")
                  :timeout 4
                  :refposhandler #'posframe-refposhandler-xwininfo))
 
-(defun exwm-show-msg (msg)
+(cl-defun exwm-show-msg (msg &key (center nil))
   (interactive
    (list (read-string "Message: ")))
   (posframe-show " *Alert*"
                  :string msg
                  :poshandler #'posframe-poshandler-window-center
-                 :border-width 1
-                 :left-fringe 3
-                 :right-fringe 3
+                 :border-width 0
+                 :left-fringe 0
+                 :right-fringe 0
                  :background-color "#68217A"
                  :timeout 4
-                 :refposhandler #'posframe-refposhandler-xwininfo))
+                 :refposhandler #'posframe-refposhandler-xwininfo)
+  (when center
+    (with-current-buffer " *Alert*"
+      (setq fill-column (-max (--map (length it) (s-lines (substring-no-properties msg)))))
+      (center-region (buffer-end -1) (buffer-end 1)))))
 
 (setq posframe-mouse-banish-function #'posframe-mouse-banish-simple)
 
