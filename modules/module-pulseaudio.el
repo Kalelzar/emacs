@@ -162,7 +162,7 @@
   (when pulseaudio-control-volume-verbose
     (let* ((volume (reduced-volume-of-sink-input id))
            (header (format "[%3d%%]" volume))
-           (width (min (- (frame-width) (length header)) (round (frame-width) 2))))
+           (width (min (- (frame-width) (length header)) (window-width) (round (frame-width) 2))))
       (exwm-show-msg (format "%s\n%s\n%s"
                              (cl-second (s-match ".* = \"\\(.*\\)\"$" (pulseaudio-control--get-sink-input-prop id "media.name")))
                              (if (string= (pulseaudio-control--get-sink-input-mute id)
@@ -189,7 +189,7 @@ bv        (volume (cl-destructuring-bind (left right) volumes
                   (round (+ (string-to-number left) (string-to-number right)) 2)))
 	(mute (string= "Mute: yes" (pulseaudio-control--get-current-mute)))
         (header (format "[%3d%%]" volume))
-        (width (min (- (frame-width) (length header)) (round (frame-width) 2))))
+        (width (min (- (frame-width) (length header)) (window-width) (round (frame-width) 2))))
     (if (string= (car volumes) (cadr volumes))
         (format "%s\n%s"
                 (pulseaudio-control--get-current-description)
