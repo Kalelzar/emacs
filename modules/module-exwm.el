@@ -56,6 +56,7 @@ Run 'man date' for more details.")
                  :poshandler #'posframe-poshandler-window-center
                  :border-width 1
                  :left-fringe 3
+                 :height (length (s-lines msg))
                  :right-fringe 3
                  :background-color "#68217A"
                  :timeout 4
@@ -68,6 +69,7 @@ Run 'man date' for more details.")
                  :string msg
                  :poshandler #'posframe-poshandler-window-center
                  :border-width 0
+                 :height (length (s-lines msg))
                  :left-fringe 0
                  :right-fringe 0
                  :background-color "#68217A"
