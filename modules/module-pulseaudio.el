@@ -161,7 +161,7 @@
 (defun pulseaudio-control--maybe-print-sink-input-status (id)
   (when pulseaudio-control-volume-verbose
     (let* ((volume (reduced-volume-of-sink-input id))
-           (header (format "[%3d%%]" volume))
+           (header (format "[%03d%%]" volume))
            (width (min (- (frame-width) (length header)) (window-width) (round (frame-width) 2))))
       (exwm-show-msg (format "%s\n%s\n%s"
                              (cl-second (s-match ".* = \"\\(.*\\)\"$" (pulseaudio-control--get-sink-input-prop id "media.name")))
@@ -175,8 +175,7 @@
                                                   :fill-face 'error
                                                   :left-face 'success
                                                   :label header))
-                             (pulseaudio-control-format-volume)
-                             )
+                             (pulseaudio-control-format-volume))
                      :center t
                      ))))
 
@@ -188,7 +187,7 @@
 bv        (volume (cl-destructuring-bind (left right) volumes
                   (round (+ (string-to-number left) (string-to-number right)) 2)))
 	(mute (string= "Mute: yes" (pulseaudio-control--get-current-mute)))
-        (header (format "[%3d%%]" volume))
+        (header (format "[%03d%%]" volume))
         (width (min (- (frame-width) (length header)) (window-width) (round (frame-width) 2))))
     (if (string= (car volumes) (cadr volumes))
         (format "%s\n%s"
@@ -218,19 +217,19 @@ bv        (volume (cl-destructuring-bind (left right) volumes
                                      :width (- width 4)
                                      :fill-face 'error
                                      :left-face 'success
-                                     :label (format "[%3d%%]" (string-to-number (car volumes))))
+                                     :label (format "[%03d%%]" (string-to-number (car volumes))))
                 (make-progress-bar (string-to-number (car volumes))
                                    :width (- width 4)
-                                   :label (format "[%3d%%]" (string-to-number (car volumes)))))
+                                   :label (format "[%03d%%]" (string-to-number (car volumes)))))
               (if mute
                   (make-progress-bar (string-to-number (cadr volumes))
                                      :width (- width 4)
                                      :fill-face 'error
                                      :left-face 'success
-                                     :label (format "[%3d%%]" (string-to-number (cadr volumes))))
+                                     :label (format "[%03d%%]" (string-to-number (cadr volumes))))
                 (make-progress-bar (string-to-number (cadr volumes))
                                    :width (- width 4)
-                                   :label (format "[%3d%%]" (string-to-number (cadr volumes))))))
+                                   :label (format "[%03d%%]" (string-to-number (cadr volumes))))))
       )
     ))
 
