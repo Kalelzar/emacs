@@ -68,8 +68,7 @@
     (marginalia--fields
      ((alist-get 'title data) :truncate 60)
      ((format "%d" (alist-get 'visits data)) :truncate 6)
-     )
-    ))
+     )))
 
 (add-to-list 'marginalia-annotator-registry '(firefox-recent-url marginalia-annotate-firefox-recent-url builtin none))
 

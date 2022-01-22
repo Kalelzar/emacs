@@ -337,7 +337,7 @@ targets."
           :truncate (/ marginalia-truncate-width 2)
           :face 'marginalia-file-name))))))
 
-
+(require 'module-jq)
 
 (when (eql system-type 'gnu/linux)
   (require 'module-bluetooth)
