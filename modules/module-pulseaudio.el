@@ -372,7 +372,7 @@ _q_: Quit"
               (potential-candidates (--map
                                      (cons (concat (car it) " - " (cdr it)) (cdr it))
                                      (--filter
-                                      (s-contains? (car it) name t)
+                                      (when (stringp (car it))(s-contains? (car it) name t))
                                       id-and-media)))
               (cand (if (< (cl-list-length potential-candidates) )
                         (caar potential-candidates)
