@@ -35,7 +35,7 @@
     (setq exwm-workspace-number 1)))
 
 (defface exwm-alert-face
-  '((default . '(:height 1.6)))
+  '((default . (:height 1.6)))
   "A face for alerts shown by `posframe' in `exwm'.")
 
 (defvar exwm-datetime-format "+     %H:%M\n%a %b %+2d %+4Y"
