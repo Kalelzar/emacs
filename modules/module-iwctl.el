@@ -29,14 +29,18 @@
 
 (defvar iwctl--signal-strength-bar-width 60)
 
+(defconst iwctl--scan-networks-command "iwctl station %s scan")
+
 (defconst iwctl--read-networks-command "iwctl station %s get-networks | perl -pe 's/^(.*?\\[0m|[[:space:]]+)(.*?)([*]+).*/\\2\\3/g' | sed -E 's/[[:space:]]+/,/g' | grep '*' | perl -pe 's/^(.*?),/(:ssid \"\\1\",/g' | sed -E 's/,([a-z]+),/ :security \"\\1\",/g;s/,(.*)$/ :signal \"\\1\")/' | tr -d '\n' | sed \"s/^/'(/;s/$/)/\"")
 
 (defconst iwctl--read-current-network-command "iwctl station %s show | grep -E 'State|Connected network' | sed -E 's/^[[:space:]]+//;s/[[:space:]]{2,}/;/g' | cut -d';' -f2 | tr '\n' ',' | perl -pe 's/(.*?),(?:(.*),)?$/(:status \"\\1\" :ssid \"\\2\")/g'")
 
 (defconst iwctl--ping-status-command "ping 1.1.1.1 -c 8 -q  | tail -2 | sed -E \"s/^8.*d, (.*),.*$/\\1/;s/rtt.*= //;s|([0-9.]+)/([0-9.]+)/([0-9.]+)/.*| min '\\1 ms', avg '\\2 ms', max '\\3 ms'|\" | tr '\n' ',' | sed -E 's/,$//'")
 
+(defun iwctl--imbue-station (string) (format string iwctl-station))
+
 (defun iwctl--read-current-network ()
-  (car (read-from-string (shell-command-to-string (format iwctl--read-current-network-command iwctl-station)))))
+  (car (read-from-string (shell-command-to-string (iwctl--imbue-station iwctl--read-current-network-command)))))
 
 (defun iwctl--ping-status ()
   (shell-command-to-string iwctl--ping-status-command))
@@ -44,25 +48,39 @@
 (defun iwctl-exwm-status ()
   (interactive)
   (iwctl--update-cache)
-  (exwm-show-msg
-   (if (string= (plist-get iwctl--current-network-cache :status) "disconnected")
-       (propertize "Disconnected" 'face '(:inherit error :reverse-video t :background "#000"))
-   (format "%s\n%s\n%s\n %s "
-           (propertize (upcase-initials (plist-get iwctl--current-network-cache :status))
-                       'face '(:inherit success :reverse-video t :background "#FFF"))
-           (plist-get iwctl--current-network-cache :ssid)
-           (plist-get
-            (--find (string= (plist-get it :ssid)
-                             (plist-get iwctl--current-network-cache :ssid))
-                    iwctl--network-cache)
-            :signal)
-           (iwctl--ping-status)))
-   :center t))
+  (if (string= (plist-get iwctl--current-network-cache :status) "disconnected")
+      (propertize "Disconnected" 'face '(:inherit error :reverse-video t :background "#000"))
+  (let ((display-msg
+         (format "%s\n%s\n%s"
+                 (propertize (upcase-initials (plist-get iwctl--current-network-cache :status))
+                             'face '(:inherit success :reverse-video t :background "#FFF"))
+                 (plist-get iwctl--current-network-cache :ssid)
+                 (plist-get
+                  (--find (string= (plist-get it :ssid)
+                                   (plist-get iwctl--current-network-cache :ssid))
+                          iwctl--network-cache)
+                  :signal))))
+    (exwm-show-msg (format "%s\n %s "
+                           display-msg
+                           "Calculating ping... please wait.")
+                   :center t
+                   :timeout nil)
+    (async-start #'(lambda ()
+                     (let ((iwctl--ping-status-command "ping 1.1.1.1 -c 8 -q  | tail -2 | sed -E \"s/^8.*d, (.*),.*$/\\1/;s/rtt.*= //;s|([0-9.]+)/([0-9.]+)/([0-9.]+)/.*| min '\\1 ms', avg '\\2 ms', max '\\3 ms'|\" | tr '\n' ',' | sed -E 's/,$//'"))
+                       (shell-command-to-string iwctl--ping-status-command)))
+                 #'(lambda (promised-value)
+                     (exwm-show-msg
+                        (format "%s\n %s "
+                                display-msg
+                                promised-value)
+                      :center t))))))
 
-
-
+(defun iwctl--scan-networks ()
+  (shell-command-to-string (iwctl--imbue-station iwctl--scan-networks-command)))
+               
 (defun iwctl--read-networks ()
-  (mapcar #'iwctl--signal-strength-replace-asterix-with-progress-bar (eval (car (read-from-string (shell-command-to-string (format iwctl--read-networks-command iwctl-station)))))))
+  (iwctl--scan-networks)
+  (mapcar #'iwctl--signal-strength-replace-asterix-with-progress-bar (eval (car (read-from-string (shell-command-to-string (iwctl--imbue-station iwctl--read-networks-command)))))))
 
 (defun iwctl--signal-strength-replace-asterix-with-progress-bar (network)
   (let* ((signal-strength (plist-get network :signal))
@@ -117,14 +135,14 @@
 (defun iwctl-connect (network)
   (interactive (list (iwctl-read-network)))
   (if (iwctl-known-p network)
-      (message (shell-command-to-string (format "iwctl station %s connect %s" iwctl-station network)))
+      (shell-command-to-string (format "iwctl station %s connect %s" iwctl-station network))
     (let ((data (seq-find #'(lambda (x) (string= (plist-get x :ssid) network)) iwctl--network-cache)))
         (if (string= (plist-get data :security) "open")
             (message (shell-command-to-string (format "iwctl station %s connect %s" iwctl-station network)))
           (message (shell-command-to-string (format "iwctl station %s connect %s --passphrase %s"
                                                     iwctl-station
                                                     network
-                                                    (read-passwd (format "Passphrase for '%s': " network)))))))))
+                                                    (read-passwd (format "Passphrase for '%s': " network)))))))))x
 
 (add-to-list 'marginalia-annotator-registry '(iwctl-wifi marginalia-annotate-iwctl-wifi builtin none))
 
