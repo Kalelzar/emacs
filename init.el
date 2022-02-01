@@ -344,6 +344,7 @@ targets."
   (require 'module-firefox)
   (require 'module-pulseaudio)
   (require 'module-iwctl)
+  (require 'module-xbacklight)
   (require 'module-playerctl)
   (require 'module-exwm-quicklaunch)
   (require 'module-exwm)
