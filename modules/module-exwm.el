@@ -135,6 +135,7 @@ Run 'man date' for more details.")
           :narrow ?x
           :category buffer
           :state ,#'consult--buffer-state
+          :action ,(lambda (cand) (exwm-workspace-switch-to-buffer cand))
           :items ,(lambda () (mapcar #'buffer-name (exwm-all-buffers))))
   "`exwm-mode' buffers source for `consult-buffer'.")
 
