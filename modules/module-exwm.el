@@ -103,6 +103,8 @@ Run 'man date' for more details.")
           ([?\H-M] . pulseaudio-control-toggle-sink-input-mute-by-index)
           ([?\H-d] . pulseaudio-sink-input-hydra/body)
           ([?\H-a] . exwm-show-time)
+          ([?\s-=] . xbacklight-inc-dwim)
+          ([?\s--] . xbacklight-dec-dwim)
           ;; 'H-N': Switch to certain workspace.
           ,@(mapcar (lambda (i)
                       `(,(kbd (format "H-%d" i)) .
