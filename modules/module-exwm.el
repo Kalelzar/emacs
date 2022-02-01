@@ -62,7 +62,7 @@ Run 'man date' for more details.")
                  :timeout 4
                  :refposhandler #'posframe-refposhandler-xwininfo))
 
-(cl-defun exwm-show-msg (msg &key (center nil))
+(cl-defun exwm-show-msg (msg &key (center nil) (timeout 4))
   (interactive
    (list (read-string "Message: ")))
   (posframe-show " *EXMW Message*"
@@ -70,10 +70,10 @@ Run 'man date' for more details.")
                  :poshandler #'posframe-poshandler-window-center
                  :border-width 1
                  :height (length (s-lines msg))
-                 :timeout 4
                  :left-fringe 3
                  :right-fringe 3
                  :background-color (face-background 'default)
+                 :timeout timeout
                  :refposhandler #'posframe-refposhandler-xwininfo)
   (when center
     (with-current-buffer " *EXMW Message*"
