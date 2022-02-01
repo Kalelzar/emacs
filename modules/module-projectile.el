@@ -24,7 +24,7 @@
 (use-package projectile)
 (use-package consult-projectile
   :after (projectile consult)
-  :binqd (("C-x f" . consult-projectile)))
+  :bind (("C-x f" . consult-projectile)))
 
 
 (provide 'module-projectile)
