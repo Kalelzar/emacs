@@ -58,25 +58,25 @@ Run 'man date' for more details.")
                  :left-fringe 3
                  :height (length (s-lines msg))
                  :right-fringe 3
-                 :background-color "#68217A"
+                 :background-color (face-background 'default)
                  :timeout 4
                  :refposhandler #'posframe-refposhandler-xwininfo))
 
 (cl-defun exwm-show-msg (msg &key (center nil))
   (interactive
    (list (read-string "Message: ")))
-  (posframe-show " *Alert*"
+  (posframe-show " *EXMW Message*"
                  :string msg
                  :poshandler #'posframe-poshandler-window-center
-                 :border-width 0
+                 :border-width 1
                  :height (length (s-lines msg))
-                 :left-fringe 0
-                 :right-fringe 0
-                 :background-color "#68217A"
                  :timeout 4
+                 :left-fringe 3
+                 :right-fringe 3
+                 :background-color (face-background 'default)
                  :refposhandler #'posframe-refposhandler-xwininfo)
   (when center
-    (with-current-buffer " *Alert*"
+    (with-current-buffer " *EXMW Message*"
       (setq fill-column (-max (--map (length it) (s-lines (substring-no-properties msg)))))
       (center-region (buffer-end -1) (buffer-end 1)))))
 
