@@ -48,8 +48,6 @@
                                    "' | dump-firefox-places-to-json")))
 
 
-
-
 (defvar firefox-recent-urls (json-read-from-string (dump-firefox-places-to-json)))
 
 (defun firefox-recent-url-sort-fn (left right)
@@ -57,9 +55,9 @@
         (rvisits (alist-get 'visits right))
         (lrecency (alist-get 'recency left))
         (rrecency (alist-get 'recency right)))
-    (if (= lvisits rvisits)
-        (> lrecency rrecency)
-      (> lvisits rvisits))))
+    (if (= lrecency rrecency)
+        (> lvisits rvisits)
+      (> lrecency rrecency))))
 
 (add-to-list 'marginalia-prompt-categories '("\\<[fF]irefox [uU][rR][lL]\\>" . firefox-recent-url))
 
@@ -67,7 +65,8 @@
   (let ((data (seq-find #'(lambda (x) (string= (alist-get 'url x) cand)) firefox-recent-urls)))
     (marginalia--fields
      ((alist-get 'title data) :truncate 60)
-     ((format "%d" (alist-get 'visits data)) :truncate 6)
+     ((format "%d" (alist-get 'visits data)) :truncate 8)
+     ((format "%d" (alist-get 'recency data)) :truncate 8)
      )))
 
 (add-to-list 'marginalia-annotator-registry '(firefox-recent-url marginalia-annotate-firefox-recent-url builtin none))
