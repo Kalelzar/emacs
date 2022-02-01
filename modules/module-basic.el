@@ -133,14 +133,18 @@
   (doom-modeline-mode))
 
 (with-eval-after-load 'consult
+  (require 'consult)
   (defun pick-module ()
+    "Offer the user a list of all modules to pick from."
     (when-let (modules (f-entries (f-join user-emacs-directory "modules")
-                                  #'(lambda (entry) (message entry)
+                                  #'(lambda (entry)
                                       (f-ext? entry "el"))))
       (consult--read modules
                      :prompt "Module: "
                      :category 'file)))
   (defun find-module (module)
+    "Open MODULE module.
+If called interactively, the module is selected via `pick-module'."
     (interactive (list (pick-module)))
     (find-file-existing module)))
 
