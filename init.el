@@ -288,7 +288,8 @@ targets."
   ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
   ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
   (setq read-extended-command-predicate
-         #'command-completion-default-include-p)
+        #'command-completion-default-include-p)
+
 
   ;; Enable indentation+completion using the TAB key.
   ;; `completion-at-point' is often bound to M-TAB.
@@ -303,7 +304,8 @@ targets."
   (defun crm-indicator (args)
     (cons (concat "[Multiple] " (car args)) (cdr args)))
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
-
+  (defalias 'completing-read-multiple 'consult-completing-read-multiple)
+  
   ;; Do not allow the cursor in the minibuffer prompt
   (setq minibuffer-prompt-properties
         '(read-only t cursor-intangible t face minibuffer-prompt))
@@ -355,3 +357,4 @@ targets."
 
 (provide 'init)
 
+(put 'upcase-region 'disabled nil)
