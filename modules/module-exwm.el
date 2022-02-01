@@ -138,6 +138,20 @@ Run 'man date' for more details.")
           :items ,(lambda () (mapcar #'buffer-name (exwm-all-buffers))))
   "`exwm-mode' buffers source for `consult-buffer'.")
 
+(setq consult--source-buffer
+        `(:name     "Buffer"
+                    :narrow   ?b
+                    :category buffer
+                    :face     consult-buffer
+                    :history  buffer-name-history
+                    :state    ,#'consult--buffer-state
+                    :default  t
+                    :enabled ,(lambda () (not (frame-parameter nil 'bufler-workspace-path)))
+                    :items
+                    ,(lambda () (consult--buffer-query :sort 'alpha
+                                                       :predicate (lambda (buffer) (not (eq 'exwm-mode (buffer-local-value 'major-mode buffer))))
+                                                       :as #'buffer-name))))
+
 (add-to-list 'consult-buffer-sources 'exwm-buffer-source)
 
 (exwm-enable)
