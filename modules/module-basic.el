@@ -96,6 +96,8 @@
 
 (line-number-mode t)
 (column-number-mode t)
+(display-time)
+
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 
@@ -144,6 +146,12 @@
 
 (use-package super-save
   :init (super-save-mode))
+
+(use-package undo-tree
+  :init (global-undo-tree-mode))
+
+(use-package crux
+  :bind (("C-k" . crux-kill-whole-line)))
 
 (use-package winner
   :init (winner-mode))
