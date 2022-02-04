@@ -128,7 +128,7 @@
                                                                  nil
                                                                  t
                                                                  (buffer-name)))
-              (killed-buffers-count (count t (mapcar #'kill-buffer buffers-to-kill))))
+              (killed-buffers-count (cl-count t (mapcar #'kill-buffer buffers-to-kill))))
     (message "Successfully deleted %d buffers." killed-buffers-count)))
 
 (bind-key "k" #'consult-kill-buffers-interactively ctl-x-map)
