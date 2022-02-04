@@ -340,6 +340,7 @@ targets."
           :face 'marginalia-file-name))))))
 
 (require 'module-jq)
+(require 'module-projectile)
 
 (when (eql system-type 'gnu/linux)
   (require 'module-bluetooth)
