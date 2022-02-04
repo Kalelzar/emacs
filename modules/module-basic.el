@@ -159,5 +159,9 @@ If called interactively, the module is selected via `pick-module'."
 (use-package winner
   :init (winner-mode))
 
+(use-package hydra)
+
+(use-package magit :pin melpa)
+
 (provide 'module-basic)
 ;;; module-basic.el ends here

@@ -23,7 +23,7 @@
 ;;
 
 ;;; Code:
-
+(use-package posframe)
 
 
 (use-package exwm

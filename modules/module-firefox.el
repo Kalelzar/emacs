@@ -27,8 +27,9 @@
 (require 'marginalia)
 (require 'vertico)
 (require 'f)
-(require 'emacsql)
-(require 'emacsql-sqlite)
+(use-package emacsql)
+(use-package emacsql-sqlite
+  :after emacsql)
 
 (defvar firefox-profile-path "~/.mozilla/firefox/auk2pako.default-release/")
 (defvar firefox-places-db (f-join firefox-profile-path "places.sqlite"))
