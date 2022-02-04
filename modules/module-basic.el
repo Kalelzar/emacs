@@ -27,7 +27,6 @@
 ;;; Code:
 
 (require 'package)
-(require 'f)
 
 (setq comp-deferred-compilation t)
 
