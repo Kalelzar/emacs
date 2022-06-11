@@ -69,7 +69,7 @@ Run 'man date' for more details.")
                  :string msg
                  :poshandler #'posframe-poshandler-window-center
                  :border-width 1
-                 :height (length (s-lines msg))
+;                 :height (+ 1 (length (s-lines msg)))
                  :left-fringe 3
                  :right-fringe 3
                  :background-color (face-background 'default)
@@ -121,7 +121,7 @@ Run 'man date' for more details.")
           ([?\C-v] . [next])
           ([?\C-d] . [delete])
           ([?\C-k] . [S-end delete])
-          ([?\C-t] . [C-S-n]))))
+          ([?\C-t] . [C-n]))))
 
 (defun exwm-all-buffers ()
   (seq-filter
@@ -155,6 +155,11 @@ Run 'man date' for more details.")
 
 (add-to-list 'consult-buffer-sources 'exwm-buffer-source)
 
+(require 'exwm-randr)
+(setq exwm-randr-workspace-output-plist '(1 "HDMI1"))
+(add-hook 'exwm-randr-screen-change-hook (lambda () (start-process-shell-command "xrandr" nil "xrandr --output HDMI1 --left-of LVDS1 --auto")))
+
+(exwm-randr-enable)
 (exwm-enable)
 
 (fringe-mode 10)

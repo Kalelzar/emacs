@@ -24,9 +24,19 @@
 
 ;;; Code:
 
-(defun xbacklight-get () (string-to-number (shell-command-to-string "xbacklight | tr -d '\n'")))
+(defun xbacklight-get (&optional callback)
+  (if callback
+      (async-start #'(lambda ()
+                       (shell-command-to-string "xbacklight | tr -d '\n'"))
+                   #'(lambda (result)
+                       (funcall callback (string-to-number result))
+                       ))
+      (string-to-number (shell-command-to-string "xbacklight | tr -d '\n'"))))
+
 (defun xbacklight-act (op value)
-  (shell-command-to-string (format "xbacklight '%s%d'" op value)))
+  (async-start
+     `(lambda () (shell-command-to-string (format "xbacklight '%s%d'" ,op ,value)))
+    'ignore))
 
 (defun xbacklight-inc (value)
   (interactive (list (read-number "Increment by: ")))
@@ -42,9 +52,12 @@
 
 (defun xbacklight-show ()
   (interactive)
-  (exwm-show-msg (make-progress-bar (xbacklight-get) :width 80
-                                    :label (format "[Brightness: %d%%]" (xbacklight-get)))
-                 :center t))
+  (xbacklight-get #'(lambda (value)
+                      (message "%d" value)
+                      (exwm-show-msg (make-progress-bar value
+                                                        :width 80
+                                                        :label (format "[Brightness: %d%%]" value))
+                 :center t))))
 
 (defvar xbacklight-step 5)
 

@@ -161,7 +161,9 @@ If called interactively, the module is selected via `pick-module'."
 
 (use-package hydra)
 
-(use-package magit :pin melpa)
+(use-package magit)
+(use-package forge
+  :after magit)
 
 (provide 'module-basic)
 ;;; module-basic.el ends here

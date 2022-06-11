@@ -36,6 +36,13 @@
 
 (defconst firefox-places-query [:select [visit_count url title frecency] :from moz_places])
 
+(defun dump-firefox-places-to-json ()
+  (shell-command-to-string (concat "sqlite3 '"
+                                   (f-expand firefox-places-db)
+                                   ".unlocked' '"
+                                   firefox-places-query-string
+                                   "' | dump-firefox-places-to-json")))
+
 (when (f-exists? firefox-profile-path)
   (defconst firefox-places-query-string
     (let* ((db (emacsql-sqlite firefox-places-db))
@@ -43,13 +50,6 @@
       (emacsql-close db)
       expr))
   (defvar firefox-recent-urls (json-read-from-string (dump-firefox-places-to-json))))
-
-(defun dump-firefox-places-to-json ()
-  (shell-command-to-string (concat "sqlite3 '"
-                                   (f-expand firefox-places-db)
-                                   ".unlocked' '"
-                                   firefox-places-query-string
-                                   "' | dump-firefox-places-to-json")))
 
 
 (defun firefox-recent-url-sort-fn (left right)

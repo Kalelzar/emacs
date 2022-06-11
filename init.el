@@ -355,6 +355,11 @@ targets."
   (use-package pinentry)
   (pinentry-start))
 
+(setq c-doc-comment-style
+      '((java-mode . javadoc)
+        (pike-mode . autodoc)
+        (c-mode    . gtkdoc)
+        (c++-mode  . doxygen)))
 
 (provide 'init)
 

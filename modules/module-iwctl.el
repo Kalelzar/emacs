@@ -24,7 +24,6 @@
 
 ;;; Code:
 
-
 (defvar iwctl-station "wlan0")
 
 (defvar iwctl--signal-strength-bar-width 60)
