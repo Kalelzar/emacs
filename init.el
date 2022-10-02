@@ -310,6 +310,12 @@ targets."
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
+(use-package ansi-color
+  :config
+  (defun colorize-compilation-buffer ()
+    (when (eq major-mode 'compilation-mode)
+      (ansi-color-apply-on-region compilation-filter-start (point-max))))
+  :hook (compilation-filter . colorize-compilation-buffer))
 
 (use-package all-the-icons)
 (use-package all-the-icons-completion
