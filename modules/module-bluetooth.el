@@ -85,7 +85,8 @@ Displays in order the device's:
       ((string= type "audio-headset") (all-the-icons-material "headset_mic"))
       ((string= type "audio-headphones") (all-the-icons-material "headset"))
       ((string= type "phone") (all-the-icons-material "smartphone"))
-      ((string= type "input-mouse") (all-the-icons-material "mouse")))
+      ((string= type "input-mouse") (all-the-icons-material "mouse"))
+      ((string= type "input-gaming") (all-the-icons-material "gamepad")))
      " ")))
 
 (add-to-list 'marginalia-annotator-registry
