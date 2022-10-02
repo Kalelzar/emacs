@@ -3,21 +3,21 @@
 
 #+BEGIN_SRC emacs-lisp :tangle yes :exports none
 
-;;; config.el -- Tangled source code of config.org -*- lexical-binding: t -*-
-;;; Commentary:
-;;; This is just an executable file created by pasting
-;;; all emacs-lisp source code blocks from config.org into
-;;; this file.
+  ;;; config.el -- Tangled source code of config.org -*- lexical-binding: t -*-
+  ;;; Commentary:
+  ;;; This is just an executable file created by pasting
+  ;;; all emacs-lisp source code blocks from config.org into
+  ;;; this file.
 
-;;; Code:
+  ;;; Code:
 
 
 #+END_SRC
 
 * Personal Information
 #+BEGIN_SRC emacs-lisp :tangle yes
-(setq user-full-name "Borislav Atanasov"
-      user-mail-address "natomanofglory@gmail.com")
+  (setq user-full-name "Borislav Atanasov"
+        user-mail-address "natomanofglory@gmail.com")
 #+END_SRC
 * Misc
 
