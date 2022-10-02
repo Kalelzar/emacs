@@ -31,7 +31,10 @@
   :config
   (setq vterm-buffer-name-string "%s - vterm"
         vterm-use-vterm-prompt-detection-method t
+        vterm-module-cmake-args "-DUSE_SYSTEM_LIBVTERM=no"
         vterm-copy-exclude-prompt t))
 
-(provide 'module-vterm)
+
+
+(provide 'module-vterm) 
 ;;; module-vterm.el ends here
