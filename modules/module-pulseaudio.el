@@ -46,16 +46,7 @@
 
 (defun pulseaudio-control--get-current-description ()
   "Get description of currently-selected sink."
-  (let (beg)
-    (pulseaudio-control--maybe-update-current-sink)
-    (with-temp-buffer
-      (pulseaudio-control--call-pactl "list sinks")
-      (goto-char (point-min))
-      (search-forward (concat "Sink #" pulseaudio-control--current-sink))
-      (search-forward "Description: ")
-      (setq beg (point))
-      (move-end-of-line nil)
-      (buffer-substring beg (point)))))
+  (s-chomp (shell-command-to-string "pulsebinder machine print | cut -d ',' -f4")))
 
 
 (defun pulseaudio-read-sink-input ()
@@ -182,14 +173,17 @@
 (defun pulseaudio-control-format-volume ()
   "Format volume of currently-selected Pulse sink."
   (interactive)
-  (let* ((volumes (cdr (s-match ".*?\\([0-9]+\\)%.*?\\([0-9]+\\)%.*"
-                               (pulseaudio-control--get-current-volume))))
-bv        (volume (cl-destructuring-bind (left right) volumes
-                  (round (+ (string-to-number left) (string-to-number right)) 2)))
-	(mute (string= "Mute: yes" (pulseaudio-control--get-current-mute)))
+  (let* ((volumes-and-mute (s-split " "
+                                (pulseaudio-control--get-current-volume-and-mute-with-pulsebinder)))
+bv        (volume (cl-destructuring-bind (left right mute) volumes-and-mute
+                    (round (+ (string-to-number left) (string-to-number right)) 2)))
+(left (string-to-number (car volumes-and-mute)) )
+(right (string-to-number (cadr volumes-and-mute)))
+          
+(mute (string= "true" (caddr volumes-and-mute)))
         (header (format "[%03d%%]" volume))
         (width (min (- (frame-width) (length header)) (window-width) (round (frame-width) 2))))
-    (if (string= (car volumes) (cadr volumes))
+    (if (= left right)
         (format "%s\n%s"
                 (pulseaudio-control--get-current-description)
                 (if mute
@@ -213,23 +207,23 @@ bv        (volume (cl-destructuring-bind (left right) volumes
                                    :width width
                                    :label header))
               (if mute
-                  (make-progress-bar (string-to-number (car volumes))
+                  (make-progress-bar left
                                      :width (- width 4)
                                      :fill-face 'error
                                      :left-face 'success
-                                     :label (format "[%03d%%]" (string-to-number (car volumes))))
-                (make-progress-bar (string-to-number (car volumes))
+                                     :label (format "[%03d%%]" left))
+                (make-progress-bar left
                                    :width (- width 4)
-                                   :label (format "[%03d%%]" (string-to-number (car volumes)))))
+                                   :label (format "[%03d%%]" left)))
               (if mute
-                  (make-progress-bar (string-to-number (cadr volumes))
+                  (make-progress-bar right
                                      :width (- width 4)
                                      :fill-face 'error
                                      :left-face 'success
-                                     :label (format "[%03d%%]" (string-to-number (cadr volumes))))
-                (make-progress-bar (string-to-number (cadr volumes))
+                                     :label (format "[%03d%%]" right))
+                (make-progress-bar right
                                    :width (- width 4)
-                                   :label (format "[%03d%%]" (string-to-number (cadr volumes))))))
+                                   :label (format "[%03d%%]" right))))
       )
     ))
 
@@ -382,17 +376,17 @@ _q_: Quit"
                                      :require-match t))))
     (cl-second (s-match ".* - \\([0-9]+\\)$" cand))))
 
-(defun pulseaudio-control-inc-dwim ()
+(defun pulseaudio-control-inc-dwim (&optional step)
   (interactive)
   (if-let ((id (exwm-buffer-if-media-source-get-id)))
       (pulseaudio-control--inc-sink-input-volume id)
-    (pulseaudio-control-increase-volume)))
+    (pulseaudio-control-increase-volume step)))
 
-(defun pulseaudio-control-dec-dwim ()
+(defun pulseaudio-control-dec-dwim (&optional step)
   (interactive)
   (if-let ((id (exwm-buffer-if-media-source-get-id)))
       (pulseaudio-control--dec-sink-input-volume id)
-    (pulseaudio-control-decrease-volume)))
+    (pulseaudio-control-decrease-volume step)))
 
 (defun pulseaudio-control-mute-dwim ()
   (interactive)
@@ -400,6 +394,183 @@ _q_: Quit"
       (pulseaudio-control-toggle-sink-input-mute-by-index id)
     (pulseaudio-control-toggle-current-sink-mute)))
       
+
+;;; Overriding `pulseaudio-control' commands
+
+(defun pulseaudio-control--get-default-sink ()
+  "Get index of DEFAULT_SINK."
+  (s-chomp (shell-command-to-string "pulsebinder machine print | cut -d, -f2")))
+
+(defun pulseaudio-control--get-current-volume-with-pulsebinder ()
+  "Get volume of currently-selected sink."
+  (s-trim (s-chomp (shell-command-to-string "pulsebinder sink-by-default channel-volume"))))
+
+(defun pulseaudio-control--get-current-volume-and-mute-with-pulsebinder ()
+  "Get volume and mute status of currently-selected sink."
+  (shell-command-to-string "pulsebinder sink-by-default channel-volume is-mute | tr -d '\n'"))
+
+(defun pulseaudio-control--get-current-mute-with-pulsebinder ()
+  "Get volume of currently-selected sink."
+  (s-chomp (shell-command-to-string "pulsebinder sink-by-default is-mute")))
+
+;;;###autoload
+(defun pulseaudio-control-decrease-volume (&optional volume)
+  "Decrease volume of currently-selected Pulse sink.
+
+Amount of decrease is specified by `pulseaudio-control-volume-step'."
+  (interactive)
+  (setq volume (if volume
+      (format "%d%%" (max (min volume 100) 0))
+       pulseaudio-control-volume-step))
+  (pulseaudio-control--maybe-update-current-sink)
+  (pulseaudio-control--call-pactl
+   (concat "set-sink-volume "
+           pulseaudio-control--current-sink
+           " -"
+           volume))
+  (if pulseaudio-control-volume-verbose
+      (pulseaudio-control-display-volume)))
+
+;;;###autoload
+(defun pulseaudio-control-increase-volume (&optional volume)
+  "Increase volume of currently-selected Pulse sink.
+
+Amount of increase is specified by `pulseaudio-control-volume-step'."
+  (interactive)
+  (setq volume (if volume
+      (format "%d%%" (max (min volume 100) 0))
+       pulseaudio-control-volume-step))
+  (pulseaudio-control--maybe-update-current-sink)
+  (let* ((volume-step-unit
+          (if (string-match "\\(%\\|dB\\)"
+                            volume)
+              (match-string 1 volume)
+            nil))
+         (volume-step
+          (cond
+           ((string-equal "%" volume-step-unit)
+            (if (string-match "^\\([[:digit:]]+\\)%"
+                              volume)
+                (string-to-number
+                 (match-string 1 volume))
+              (user-error "Invalid step spec in `pulseaudio-control-volume-step'")))
+           ((string-equal "dB" volume-step-unit)
+            (if (string-match "^\\([[:digit:]]+\\)dB"
+                              volume)
+                (string-to-number
+                 (match-string 1 pulseaudio-control-volume-step))
+              (user-error "Invalid step spec in `pulseaudio-control-volume-step'")))
+           ((if (string-match "^\\([[:digit:]]+\\.[[:digit:]]+\\)"
+                              volume)
+                (string-to-number volume)
+              (user-error "Invalid step spec in `pulseaudio-control-volume-step'")))))
+         (volume-max
+          (cond
+           ((string-equal "%" volume-step-unit)
+            (cdr (assoc "percent" pulseaudio-control--volume-maximum)))
+           ((string-equal "dB" volume-step-unit)
+            (cdr (assoc "decibels" pulseaudio-control--volume-maximum)))
+           (t
+            (cdr (assoc "raw" pulseaudio-control--volume-maximum)))))
+         (volumes-current (pulseaudio-control--get-current-volume))
+         (volumes-re-component
+          (concat
+           "\\([[:digit:]]+\\)"
+           "\\s-+/\\s-+"
+           "\\([[:digit:]]+\\)%"
+           "\\s-+/\\s-+"
+           "\\(-?\\([[:digit:]]+\\(\\.[[:digit:]]+\\)?\\)\\|-inf\\) dB"))
+         (volumes-re (concat volumes-re-component
+                             "[^[:digit:]]+"
+                             volumes-re-component))
+         (volumes-alist
+          (progn
+            (string-match volumes-re volumes-current)
+            `(("raw-left" . ,(string-to-number
+                              (match-string 1 volumes-current)))
+              ("percentage-left" . ,(string-to-number
+                                     (match-string 2 volumes-current)))
+              ("db-left" . ,(if (string=
+                                 (match-string 3 volumes-current)
+                                 "-inf")
+                                pulseaudio-control--volume-minimum-db
+                              (string-to-number
+                               (match-string 3 volumes-current))))
+              ("raw-right" . ,(string-to-number
+                               (match-string 6 volumes-current)))
+              ("percentage-right" . ,(string-to-number
+                                      (match-string 7 volumes-current)))
+              ("db-right" . ,(if (string=
+                                  (match-string 8 volumes-current)
+                                  "-inf")
+                                 pulseaudio-control--volume-minimum-db
+                               (string-to-number
+                                (match-string 8 volumes-current))))))))
+    (let ((clamp nil)
+          (clamp-value nil))
+      (cond
+       ((string-equal "%" volume-step-unit)
+        (if (or (> (+ (cdr (assoc "percentage-left" volumes-alist)) volume-step)
+                   volume-max)
+                (> (+ (cdr (assoc "percentage-right" volumes-alist)) volume-step)
+                   volume-max))
+            (progn
+              (setq clamp t)
+              (setq clamp-value (concat (number-to-string volume-max) "%")))))
+       ((string-equal "dB" volume-step-unit)
+        (if (or (> (+ (cdr (assoc "db-left" volumes-alist)) volume-step)
+                   volume-max)
+                (> (+ (cdr (assoc "db-right" volumes-alist)) volume-step)
+                   volume-max))
+            (progn
+              (setq clamp t)
+              (setq clamp-value (concat (number-to-string volume-max) "dB")))))
+       (t
+        (if (or (> (+ (cdr (assoc "raw-left" volumes-alist)) volume-step)
+                   volume-max)
+                (> (+ (cdr (assoc "raw-right" volumes-alist)) volume-step)
+                   volume-max))
+            (progn
+              (setq clamp t)
+              (setq clamp-value (number-to-string volume-max))))))
+
+      (if clamp
+
+          ;; Clamp volume to value of `pulseaudio-control--volume-maximum'.
+
+          (pulseaudio-control--call-pactl
+           (concat "set-sink-volume "
+                   pulseaudio-control--current-sink
+                   " "
+                   clamp-value))
+
+        ;; Increase volume by `pulseaudio-control-volume-step'.
+        ;;
+        ;; Once the PulseAudio volume becomes "0 / 0% / -inf dB", we can't:
+        ;; * increase volume by x dB units, because -inf + x = -inf;
+        ;; * specify an absolute dB value of -120, because pactl interprets
+        ;;   this as "decrease volume by 120dB";
+        ;; * scale by a linear factor of x, because 0 * x = 0.
+        ;; So in this situation, when the user is using a dB value or
+        ;; linear factor to increase volume, we set the volume to an arbitrary
+        ;; small non-zero raw value, which subsequent volume increases can
+        ;; act upon.
+
+        (if (and (or (not volume-step-unit) ; `volume-step-unit' is nil
+                     (string= "dB" volume-step-unit))
+                 (or (= 0 (cdr (assoc "raw-left" volumes-alist)))
+                     (= 0 (cdr (assoc "raw-right" volumes-alist)))))
+            (pulseaudio-control--call-pactl
+             (concat "set-sink-volume "
+                     pulseaudio-control--current-sink
+                     " 100"))
+          (pulseaudio-control--call-pactl
+           (concat "set-sink-volume "
+                   pulseaudio-control--current-sink
+                   " +"
+                   volume)))))
+    (if pulseaudio-control-volume-verbose
+        (pulseaudio-control-display-volume))))
 
 
 (provide 'module-pulseaudio)
