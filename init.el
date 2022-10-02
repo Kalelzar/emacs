@@ -16,7 +16,14 @@
 (use-package windmove
   :init (windmove-default-keybindings))
 
-(use-package org :pin gnu)
+(use-package org :pin gnu
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python . t)
+     (C . t)
+     (shell . t)
+     (lisp . t))))
 (use-package org-contrib)
 
 ;; Enable vertico
