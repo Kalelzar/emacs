@@ -407,6 +407,8 @@ targets."
         (c-mode    . gtkdoc)
         (c++-mode  . doxygen)))
 
+(unbind-key "C-z")
+(unbind-key "C-x C-z")
 (provide 'init)
 
 (put 'upcase-region 'disabled nil)
