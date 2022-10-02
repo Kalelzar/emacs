@@ -48,6 +48,12 @@ Run 'man date' for more details.")
                                                     exwm-datetime-format
                                                     "'"))))
 
+(defun exwm-show-battery ()
+  (interactive)
+  (let* ((battery (battery-upower))
+         (perc (string-to-number (alist-get 112 battery))))
+    (exwm-show-msg (make-progress-bar perc :width 100 :label (format "%s [%d%%]" (alist-get 66 battery) perc)))))
+
 (defun exwm-show-alert (msg)
   (interactive
    (list (read-string "Message: ")))
@@ -100,6 +106,7 @@ Run 'man date' for more details.")
           ([?\H--] . pulseaudio-control-dec-dwim)
           ([?\H-_] . pulseaudio-control-decrease-volume)
           ([?\H-m] . pulseaudio-control-mute-dwim)
+          ([?\H-s] . exwm-show-battery)
           (,(kbd "<XF86AudioRaiseVolume>") . pulseaudio-control-inc-dwim)
           (,(kbd "C-<XF86AudioRaiseVolume>") . pulseaudio-control-increase-volume)
           (,(kbd "<XF86AudioLowerVolume>") . pulseaudio-control-dec-dwim)
