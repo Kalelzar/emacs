@@ -483,7 +483,10 @@ targets."
   ;; Enables ligature checks globally in all buffers.  You can also do it
   ;; per mode with `ligature-mode'.
   (global-ligature-mode t))
+
 (display-battery-mode)
+(iwctl-display-mode)
+
 (provide 'init)
 
 (put 'upcase-region 'disabled nil)

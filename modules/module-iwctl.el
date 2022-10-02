@@ -147,5 +147,35 @@
 
 (add-to-list 'marginalia-annotator-registry '(iwctl-wifi marginalia-annotate-iwctl-wifi builtin none))
 
+(defun iwctl-get-current-network ()
+  (iwctl--update-cache)
+  (var current-network (iwctl--read-current-network)
+       (seq-find #'(lambda (x) (string= (plist-get x :ssid) (plist-get current-network :ssid))) iwctl--network-cache)))
+
+(defun iwctl-mode-line-function ()
+  (setq iwctl-mode-line-string
+        (if-var current-network (iwctl-get-current-network)
+                (let ((ssid (plist-get current-network :ssid)))
+                  (format "%s%s" (all-the-icons-material "signal_wifi_4_bar") ssid))
+                (format "%s" (all-the-icons-material "signal_wifi_off")))))
+
+(defvar iwctl-mode-line-string "")
+(defvar iwctl-mode-line-timer nil)
+
+(define-minor-mode iwctl-display-mode
+  "Toggle network status display in mode line (Display iwctl mode).
+
+The text displayed in the mode line is controlled by `iwctl-mode-line-function'.
+The mode line is be updated every 5 seconds."
+  :global t
+  (setq iwctl-mode-line-string "")
+  (or global-mode-string (setq global-mode-string '("")))
+  (and iwctl-mode-line-timer (cancel-timer iwctl-mode-line-timer))
+  (if (not iwctl-display-mode)
+      (setq global-mode-string 
+	    (delq 'iwctl-mode-line-string global-mode-string))
+    (add-to-list 'global-mode-string 'iwctl-mode-line-string t)
+    (setq iwctl-mode-line-timer (run-with-timer nil 5 #'iwctl-mode-line-function))))
+
 (provide 'module-iwctl)
 ;;; module-iwctl.el ends here
