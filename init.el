@@ -57,8 +57,8 @@
     ;; Still sort by history position, length and alphabetically
     (setq files (vertico-sort-history-length-alpha files))
     ;; But then move directories first
-    (let ((dir-then-files (nconc (sort (seq-filter (lambda (x) (string-suffix-p "/" x)) files) #'string<)
-				 (sort (seq-remove (lambda (x) (string-suffix-p "/" x)) files) #'string<))))
+    (let ((dir-then-files (nconc (seq-filter (lambda (x) (string-suffix-p "/" x)) files)
+				 (seq-remove (lambda (x) (string-suffix-p "/" x)) files))))
       (nconc (seq-remove (lambda (x) (string-prefix-p "." x)) dir-then-files)
 	     (seq-filter (lambda (x) (string-prefix-p "." x)) dir-then-files))
       ))
