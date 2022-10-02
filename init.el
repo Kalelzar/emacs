@@ -298,6 +298,10 @@ targets."
            'vertico-map
            "Kill buffer at point")
 
+
+(bind-key "C-x r v" #'register-to-point)
+(bind-key "C-x x" #'replace-regexp) 
+
 (use-package kind-icon
   :ensure t
   :after corfu
