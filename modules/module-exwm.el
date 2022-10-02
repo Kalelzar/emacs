@@ -165,8 +165,8 @@ Run 'man date' for more details.")
 (add-to-list 'consult-buffer-sources 'exwm-buffer-source)
 
 (require 'exwm-randr)
-(setq exwm-randr-workspace-output-plist '(1 "HDMI1"))
-(add-hook 'exwm-randr-screen-change-hook (lambda () (start-process-shell-command "xrandr" nil "xrandr --output HDMI1 --left-of LVDS1 --auto")))
+(setq exwm-randr-workspace-output-plist '(1 "HDMI-1-0" 0 "eDP1"))
+(add-hook 'exwm-randr-screen-change-hook (lambda () (start-process-shell-command "xrandr" nil "xrandr --output HDMI-1-0 --left-of eDP1 --auto")))
 
 (exwm-randr-enable)
 (exwm-enable)
