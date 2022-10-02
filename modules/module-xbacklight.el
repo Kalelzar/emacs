@@ -24,19 +24,62 @@
 
 ;;; Code:
 
+
+(defvar runs-scheduled '())
+
+(defmacro run-at-time--partial (time repeat fn &optional args)
+  `(apply (apply-partially #'run-at-time ,time ,repeat ,fn) ,args))
+
+(defun run-later (time identifier argfn fn &rest args)
+  (when-let* ((timer (plist-get runs-scheduled identifier))
+              (is-valid (not (timer--triggered timer)))
+              (old-args (timer--args timer)))
+    (setq args (funcall argfn args old-args))
+    (cancel-timer timer))
+  (let ((timer (run-at-time--partial time nil fn args)))
+    (setq runs-scheduled (plist-put runs-scheduled identifier timer)))) 
+
 (defun xbacklight-get (&optional callback)
-  (if callback
-      (async-start #'(lambda ()
-                       (shell-command-to-string "xbacklight | tr -d '\n'"))
-                   #'(lambda (result)
-                       (funcall callback (string-to-number result))
-                       ))
-      (string-to-number (shell-command-to-string "xbacklight | tr -d '\n'"))))
+  (let ((timer-fn
+         (lambda (cmd)
+               (funcall callback (string-to-number (shell-command-to-string cmd)))))
+        (arg-fn (lambda (new old) new)))
+    (run-later 0.2 :xbacklight-get arg-fn timer-fn "xbacklight | tr -d '\n'")))
+            
+
+(defun eval-act-args (old-op new-op old-value new-value)
+  (cond
+   ((string= new-op "=") (list "=" new-value))
+   ((and (string= old-op "=")
+        (string= new-op "+"))
+    (list "=" (min (+ old-value new-value) 100)))
+   ((and (string= old-op "=")
+        (string= new-op "-"))
+    (list "=" (max (- old-value new-value) 0)))
+   ((and (string= old-op "+")
+        (string= new-op "+"))
+    (list "+" (min (+ old-value new-value) 100)))
+   ((and (string= old-op "+")
+        (string= new-op "-"))
+    (list (if (< old-value new-value) "-" "+")
+                    (max (- old-value new-value) -100)))
+   ((and (string= old-op "-")
+        (string= new-op "+"))
+    (list (if (> old-value new-value) "-" "+")
+                    (max (- new-value old-value) -100)))
+   ((and (string= old-op "-")
+        (string= new-op "-"))
+    (list "-" (min (+ old-value new-value) 100)))
+   (t (error "Invalid operation for xbacklight"))))
+
+(defun xbacklight-act-args (old new)
+  (cl-destructuring-bind (old-op old-value) old
+    (cl-destructuring-bind (new-op new-value) new
+      (eval-act-args old-op new-op old-value new-value))))
 
 (defun xbacklight-act (op value)
-  (async-start
-     `(lambda () (shell-command-to-string (format "xbacklight '%s%d'" ,op ,value)))
-    'ignore))
+    (let ((timer-fn (lambda (op value) (shell-command-to-string (format "xbacklight '%s%d'" op value)))))
+    (run-later 0.2 :xbacklight-act #'xbacklight-act-args timer-fn op value)))
 
 (defun xbacklight-inc (value)
   (interactive (list (read-number "Increment by: ")))
