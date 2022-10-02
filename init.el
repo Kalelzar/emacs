@@ -418,8 +418,46 @@ targets."
           (xdg-open (,command)))))
 
 ;(with-xdg-open cme-pick-book)
+
 (unbind-key "C-z")
 (unbind-key "C-x C-z")
+
+(defun buffer-major-mode-name (buffer)
+  (with-current-buffer buffer
+    (var major-mode-string (if (stringp mode-name) mode-name (or (and (eql (car mode-name) :eval) (eval (plist-get mode-name :eval))) (car mode-name)))
+         (propertize major-mode-string 'face 'outline-1))))
+
+(defun display-buffer-history ()
+  (interactive)
+  (let* ((next (-map #'buffer-name (window-next-buffers)))
+        (current (buffer-name (current-buffer)))
+        (prev (--remove
+               (or (string= it current) (var -compare-fn #'string= (-contains? next it))) 
+               (--map (buffer-name (car it)) (window-prev-buffers)))))
+
+    (var max-length (max
+                     (--reduce-from (max acc (length it)) 0 next)
+                     (+ (length current) 2)
+                     (--reduce-from (max acc (length it)) 0 prev))
+    
+    (let ((next-string (s-join "\n" (reverse (--map (format "%s %s" (s-pad-right max-length " " it) (buffer-major-mode-name it)) next))))
+          (current-string (format "> %s %s" (propertize (s-pad-right (- max-length 2) " " current)  'face 'success) (buffer-major-mode-name current)))
+          (prev-string (s-join "\n" (--map (format "%s %s" (s-pad-right max-length " " it) (buffer-major-mode-name it)) prev))))
+      (exwm-show-msg (format "%s\n%s\n%s" next-string current-string prev-string)
+                     :timeout 1)))))
+
+(defun previous-buffer-with-history ()
+  (interactive)
+  (previous-buffer)
+  (display-buffer-history))
+
+(defun next-buffer-with-history ()
+  (interactive)
+  (next-buffer)
+  (display-buffer-history))
+
+(bind-key "<mouse-8>" #'previous-buffer-with-history)
+(bind-key "<mouse-9>" #'next-buffer-with-history)
 (provide 'init)
 
 (put 'upcase-region 'disabled nil)
