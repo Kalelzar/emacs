@@ -396,6 +396,7 @@ targets."
   (require 'module-playerctl)
   (require 'module-exwm-quicklaunch)
   (require 'module-exwm)
+  (require 'module-batch)
 
   (use-package pinentry)
   (pinentry-start))
