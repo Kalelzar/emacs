@@ -188,6 +188,12 @@
   :init
   (global-corfu-mode))
 
+(use-package corfu-doc
+  :after corfu
+  :custom
+  (corfu-doc-max-height 14)
+  :init
+  (corfu-doc-mode t))
 
 (use-package embark
   :ensure t
