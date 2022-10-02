@@ -275,6 +275,23 @@ targets."
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
+(cl-defmacro key-closure (key-sequence docstring &body form)
+  "Return a closure that will repeat the provided KEY-SEQUENCE when called."
+  `(cl-flet ((key-closure-func ()
+               ,docstring
+               (interactive)
+               (message "%s" (nth (- vertico--index 1) vertico--candidates))
+               (let ((extended-key-sequence (format "%s " ,key-sequence vertico--index)))
+                 (setq unread-command-events (listify-key-sequence (kbd extended-key-sequence)))
+)))
+     (let ((it (cl-function key-closure-func)))
+     ,@form)))
+
+(defmacro alias-key (key-sequence alias keymap docstring)
+  "Treat KEY-SEQUENCE as if it were ALIAS in a KEYMAP."
+  `(key-closure ,alias ,docstring (bind-key ,key-sequence it ,keymap)))
+
+(setq bind-key-describe-special-forms t)
 (use-package kind-icon
   :ensure t
   :after corfu
