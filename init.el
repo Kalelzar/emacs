@@ -349,7 +349,7 @@ targets."
   (defun crm-indicator (args)
     (cons (concat "[Multiple] " (car args)) (cdr args)))
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
-  (defalias 'completing-read-multiple 'consult-completing-read-multiple)
+;  (defalias 'completing-read-multiple 'magit-completing-read-multiple)
   
   ;; Do not allow the cursor in the minibuffer prompt
   (setq minibuffer-prompt-properties
