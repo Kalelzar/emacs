@@ -158,7 +158,7 @@ Run 'man date' for more details.")
                     :default  t
                     :enabled ,(lambda () (not (frame-parameter nil 'bufler-workspace-path)))
                     :items
-                    ,(lambda () (consult--buffer-query :sort 'alpha
+                    ,(lambda () (consult--buffer-query :sort nil
                                                        :predicate (lambda (buffer) (not (eq 'exwm-mode (buffer-local-value 'major-mode buffer))))
                                                        :as #'buffer-name))))
 
