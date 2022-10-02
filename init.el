@@ -407,6 +407,17 @@ targets."
         (c-mode    . gtkdoc)
         (c++-mode  . doxygen)))
 
+(defun xdg-open (what)
+  (var cmd (format " xdg-open '%s'" what)
+       (start-process "xdg-open" cmd "xdg-open" what)))
+
+(defmacro with-xdg-open (command)
+  (var new-name (intern (format "%s-open-dwim" (symbol-name command)))
+       `(defun ,new-name ()
+          (interactive)
+          (xdg-open (,command)))))
+
+;(with-xdg-open cme-pick-book)
 (unbind-key "C-z")
 (unbind-key "C-x C-z")
 (provide 'init)
