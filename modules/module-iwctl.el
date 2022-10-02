@@ -30,7 +30,7 @@
 
 (defconst iwctl--scan-networks-command "iwctl station %s scan")
 
-(defconst iwctl--read-networks-command "iwctl station %s get-networks | perl -pe 's/^(.*?\\[0m|[[:space:]]+)(.*?)([*]+).*/\\2\\3/g' | sed -E 's/[[:space:]]+/,/g' | grep '*' | perl -pe 's/^(.*?),/(:ssid \"\\1\",/g' | sed -E 's/,([a-z]+),/ :security \"\\1\",/g;s/,(.*)$/ :signal \"\\1\")/' | tr -d '\n' | sed \"s/^/'(/;s/$/)/\"")
+(defconst iwctl--read-networks-command "iwctl station %s get-networks | sed -E 's/[[:space:]]{2,}/,/g' | perl -pe 's/^.*,(.*),(.*),([*]*).*,$/(:ssid \"\\1\" :security \"\\2\" :signal \"\\3\")/' | grep --color=never '*' | tr -d '\n' | sed -E \"s/(.*)/'(\\1)/\"")
 
 (defconst iwctl--read-current-network-command "iwctl station %s show | grep -E 'State|Connected network' | sed -E 's/^[[:space:]]+//;s/[[:space:]]{2,}/;/g' | cut -d';' -f2 | tr '\n' ',' | perl -pe 's/(.*?),(?:(.*),)?$/(:status \"\\1\" :ssid \"\\2\")/g'")
 
@@ -89,7 +89,8 @@
                                         :to 5.0
                                         :width iwctl--signal-strength-bar-width
                                         :label "[Signal Strength]")))
-      (plist-put network :signal signal-bar)))
+    (plist-put (plist-put network :signal signal-bar)
+               :signal-strength signal-level)))
 
 (defun iwctl--read-known-networks ()
   (eval (car (read-from-string (shell-command-to-string "iwctl known-networks list | grep , | cut -d, -f1 | sed -E 's/[[:space:]]+/,/g' | cut -d, -f2 | sed -E 's/(.*)/\"\\1\" /g' | tr -d '\n' | sed \"s/$/)/;s/^/\'(/\"")))))
@@ -133,7 +134,8 @@
 
 (defun iwctl-connect (network)
   (interactive (list (iwctl-read-network)))
-  (if (iwctl-known-p network)
+  (when (string= (plist-get iwctl--current-network-cache :ssid) network) (shell-command-to-string (format "iwctl station %s disconnect %s" iwctl-station network)))
+  (if (iwctl-known-p network) 
       (shell-command-to-string (format "iwctl station %s connect %s" iwctl-station network))
     (let ((data (seq-find #'(lambda (x) (string= (plist-get x :ssid) network)) iwctl--network-cache)))
         (if (string= (plist-get data :security) "open")
