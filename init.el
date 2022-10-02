@@ -292,6 +292,12 @@ targets."
   `(key-closure ,alias ,docstring (bind-key ,key-sequence it ,keymap)))
 
 (setq bind-key-describe-special-forms t)
+
+(alias-key "C-k"
+           "C-u C-. k y"
+           'vertico-map
+           "Kill buffer at point")
+
 (use-package kind-icon
   :ensure t
   :after corfu
