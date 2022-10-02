@@ -369,7 +369,7 @@ targets."
     (when-let (buffer (get-buffer cand))
       (with-current-buffer buffer
         (marginalia--fields
-         ((propertize (format "%s" exwm-class-name) 'display '(:align-to left)) :truncate (/ marginalia-truncate-width 8))
+         ((propertize (format "%s" exwm-class-name) 'display '(:align-to left)) :truncate (/ marginalia-field-width 8))
          ((propertize " " 'display '(space :align-to center)))
          ((format "Workspace: %d " exwm--desktop))))))
 
@@ -381,7 +381,7 @@ targets."
         (marginalia--fields
          ((marginalia--buffer-status buffer))
          ((marginalia--buffer-file buffer)
-          :truncate (/ marginalia-truncate-width 2)
+          :truncate (/ marginalia-field-width 2)
           :face 'marginalia-file-name))))))
 
 (require 'module-jq)
