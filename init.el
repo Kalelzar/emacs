@@ -1,11 +1,15 @@
 ;;; init.el --- PL -*- lexical-binding: t; -*-
+;;; Commentary:
 ;;; Setup MELPA
+
+;;; Code:
 
 (add-to-list 'load-path (concat user-emacs-directory "modules"))
 
 (require 'module-basic)
 (require 'module-vterm)
 (require 'module-consult)
+(require 'framemove)
 
 (use-package which-key
   :init (which-key-mode)
@@ -14,7 +18,10 @@
   (setq which-key-allow-imprecise-window-fit nil))
 
 (use-package windmove
-  :init (windmove-default-keybindings))
+  :init
+  (windmove-default-keybindings)
+  (setq framemove-hook-into-windmove t))
+
 
 (use-package org :pin gnu)
 (use-package org-contrib)
@@ -179,7 +186,7 @@
   ;; Recommended: Enable Corfu globally.
   ;; This is recommended since dabbrev can be used globally (M-/).
   :init
-  (corfu-global-mode))
+  (global-corfu-mode))
 
 
 
@@ -304,7 +311,6 @@ targets."
   (defun crm-indicator (args)
     (cons (concat "[Multiple] " (car args)) (cdr args)))
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
-  (defalias 'completing-read-multiple 'consult-completing-read-multiple)
   
   ;; Do not allow the cursor in the minibuffer prompt
   (setq minibuffer-prompt-properties
@@ -324,7 +330,7 @@ targets."
     (when-let (buffer (get-buffer cand))
       (with-current-buffer buffer
         (marginalia--fields
-         ((propertize (format "%s" exwm-class-name) 'display '(:align-to left)) :truncate (/ marginalia-truncate-width 8))
+         ((propertize (format "%s" exwm-class-name) 'display '(:align-to left)) :truncate (/ marginalia-field-width 8))
          ((propertize " " 'display '(space :align-to center)))
          ((format "Workspace: %d " exwm--desktop))))))
 
@@ -336,7 +342,7 @@ targets."
         (marginalia--fields
          ((marginalia--buffer-status buffer))
          ((marginalia--buffer-file buffer)
-          :truncate (/ marginalia-truncate-width 2)
+          :truncate (/ marginalia-field-width 2)
           :face 'marginalia-file-name))))))
 
 (require 'module-jq)
@@ -355,6 +361,7 @@ targets."
   (pinentry-start))
 
 
-(provide 'init)
 
 (put 'upcase-region 'disabled nil)
+(provide 'init)
+;;; init.el ends here
