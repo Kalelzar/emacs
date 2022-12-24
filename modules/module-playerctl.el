@@ -125,19 +125,6 @@ COMMAND is a string that matches any of the following:
                                     command))))
 
 
-(defun marginalia-annotate-mpris-player (cand)
-  (let ((metadata (alist-get cand (playerctl-get-all-players-metadata) nil nil #'string=)))
-    (marginalia--fields
-     ((car (alist-get "title" metadata '("Unknown") nil #'string=))
-      :face font-lock-builtin-face
-      :truncate (/ marginalia-truncate-width 2))
-     ((car (alist-get "artist" metadata '("Unknown") nil #'string=))
-      :face font-lock-comment-face
-      :truncate (round (/ marginalia-truncate-width 3)))
-     ((car (alist-get "album" metadata '("") nil #'string=))
-      :face font-lock-keyword-face
-      :truncate (round (/ marginalia-truncate-width 1.5))))))
-
 (with-eval-after-load 'module-exwm
   (cl-defun exwm-get-buffers-playing-media (&optional (media nil))   
     (--filter
