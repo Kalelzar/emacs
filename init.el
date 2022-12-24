@@ -397,6 +397,7 @@ targets."
   (require 'module-exwm-quicklaunch)
   (require 'module-exwm)
   (require 'module-batch)
+  (require 'module-eglot)
 
   (use-package pinentry)
   (pinentry-start))
@@ -446,6 +447,8 @@ targets."
       (exwm-show-msg (format "%s\n%s\n%s" next-string current-string prev-string)
                      :timeout 1)))))
 
+
+
 (defun previous-buffer-with-history ()
   (interactive)
   (previous-buffer)
@@ -455,9 +458,6 @@ targets."
   (interactive)
   (next-buffer)
   (display-buffer-history))
-
-(bind-key "<mouse-8>" #'previous-buffer-with-history)
-(bind-key "<mouse-9>" #'next-buffer-with-history)
 
 (use-package ligature
   :config
