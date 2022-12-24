@@ -163,5 +163,11 @@ If called interactively, the module is selected via `pick-module'."
 
 (unbind-key "C-z")
 
+(use-package hydra)
+
+(use-package magit)
+(use-package forge
+  :after magit)
+
 (provide 'module-basic)
 ;;; module-basic.el ends here

@@ -24,6 +24,8 @@
 
 ;;; Code:
 
+(use-package posframe)
+
 (use-package exwm
   :after consult
   :demand t
@@ -48,6 +50,12 @@ Run 'man date' for more details.")
                                                     exwm-datetime-format
                                                     "'"))))
 
+(defun exwm-show-battery ()
+  (interactive)
+  (let* ((battery (battery-upower))
+         (perc (string-to-number (alist-get 112 battery))))
+    (exwm-show-msg (make-progress-bar perc :width 100 :label (format "%s [%d%%]" (alist-get 66 battery) perc)))))
+
 (defun exwm-show-alert (msg)
   (interactive
    (list (read-string "Message: ")))
@@ -69,7 +77,7 @@ Run 'man date' for more details.")
                  :string msg
                  :poshandler #'posframe-poshandler-window-center
                  :border-width 1
-                 :height (length (s-lines msg))
+;                 :height (+ 1 (length (s-lines msg)))
                  :left-fringe 3
                  :right-fringe 3
                  :background-color (face-background 'default)
@@ -100,9 +108,23 @@ Run 'man date' for more details.")
           ([?\H--] . pulseaudio-control-dec-dwim)
           ([?\H-_] . pulseaudio-control-decrease-volume)
           ([?\H-m] . pulseaudio-control-mute-dwim)
+          ([?\H-s] . exwm-show-battery)
+          ;; (,(kbd "<XF86AudioRaiseVolume>") . puls eaudio-control-inc-dwim)
+          ;; (,(kbd "C-<XF86AudioRaiseVolume>") . pulseaudio-control-increase-volume)
+          ;; (,(kbd "<XF86AudioLowerVolume>") . pulseaudio-control-dec-dwim)
+          ;; (,(kbd "C-<XF86AudioLowerVolume>") . pulseaudio-control-decrease-volume)
+          ;; (,(kbd "<XF86AudioRewind>") . pulseaudio-control-dec-dwim)
+          ;; (,(kbd "<XF86AudioForward>") . pulseaudio-control-inc-dwim)
+          ;; (,(kbd "<XF86AudioMute>") . pulseaudio-control-mute-dwim)
+          ;; (,(kbd "<mouse-8>") . previous-buffer-with-history)
+          ;; (,(kbd "<mouse-9>") . next-buffer-with-history)
+          (,(kbd "M-<tab>") . previous-buffer-with-history)
+          (,(kbd "M-<iso-lefttab>") . next-buffer-with-history)
           ([?\H-M] . pulseaudio-control-toggle-sink-input-mute-by-index)
           ([?\H-d] . pulseaudio-sink-input-hydra/body)
           ([?\H-a] . exwm-show-time)
+          ;; (,(kbd "<XF86MonBrightnessUp>") . xbacklight-inc-dwim)
+          ;; (,(kbd "<XF86MonBrightnessDown>") . xbacklight-dec-dwim)
           ([?\s-=] . xbacklight-inc-dwim)
           ([?\s--] . xbacklight-dec-dwim)
           (,(kbd "H-<left>") . windmove-left)
@@ -117,15 +139,15 @@ Run 'man date' for more details.")
                           (ewg/switch-create-group ,i))))
                     (number-sequence 0 9)))))
 ;; Line-editing shortcuts
-(unless (get 'exwm-input-simulation-keys 'saved-value)
-  (setq exwm-input-simulation-keys
-        '(([?\C-a] . [home])
-          ([?\C-e] . [end])
-          ([?\M-v] . [prior])
-          ([?\C-v] . [next])
-          ([?\C-d] . [delete])
-          ([?\C-k] . [S-end delete])
-          ([?\C-t] . [C-S-n]))))
+;; (unless (get 'exwm-input-simulation-keys 'saved-value)
+;;   (setq exwm-input-simulation-keys
+;;         '(([?\C-a] . [home])
+;;           ([?\C-e] . [end])
+;;           ([?\M-v] . [prior])
+;;           ([?\C-v] . [next])
+;;           ([?\C-d] . [delete])
+;;           ([?\C-k] . [S-end delete])
+;;           ([?\C-t] . [C-n]))))
 
 (defun exwm-all-buffers ()
   (seq-filter
@@ -153,13 +175,14 @@ Run 'man date' for more details.")
                     :default  t
                     :enabled ,(lambda () (not (frame-parameter nil 'bufler-workspace-path)))
                     :items
-                    ,(lambda () (consult--buffer-query :sort 'alpha
+                    ,(lambda () (consult--buffer-query :sort nil
                                                        :predicate (lambda (buffer) (not (eq 'exwm-mode (buffer-local-value 'major-mode buffer))))
                                                        :as #'buffer-name))))
 
 (add-to-list 'consult-buffer-sources 'exwm-buffer-source)
 
-(ewg/init (list "DVI-D-0" "HDMI-0"))
+
+(ewg/init (list "HDMI-1-0" "eDP1"))
 
 (exwm-enable)
 

@@ -3,21 +3,21 @@
 
 #+BEGIN_SRC emacs-lisp :tangle yes :exports none
 
-;;; config.el -- Tangled source code of config.org -*- lexical-binding: t -*-
-;;; Commentary:
-;;; This is just an executable file created by pasting
-;;; all emacs-lisp source code blocks from config.org into
-;;; this file.
+  ;;; config.el -- Tangled source code of config.org -*- lexical-binding: t -*-
+  ;;; Commentary:
+  ;;; This is just an executable file created by pasting
+  ;;; all emacs-lisp source code blocks from config.org into
+  ;;; this file.
 
-;;; Code:
+  ;;; Code:
 
 
 #+END_SRC
 
 * Personal Information
 #+BEGIN_SRC emacs-lisp :tangle yes
-(setq user-full-name "Borislav Atanasov"
-      user-mail-address "natomanofglory@gmail.com")
+  (setq user-full-name "Borislav Atanasov"
+        user-mail-address "natomanofglory@gmail.com")
 #+END_SRC
 * Misc
 
@@ -78,18 +78,19 @@ You /could/ theoretically go without it (considering it is a big performance hit
 but it *is* hard for me to justify it.
 
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package lsp-mode
-  :commands lsp
-  :hook ((c++-mode scala-mode) . (lambda ()
-                                     (lsp)
-                                     (lsp-semantic-tokens-mode)
-                                     (lsp-treemacs-sync-mode))))
-(use-package lsp-ui
-  :commands lsp-ui-mode
-  :after lsp)
-(use-package company-lsp
-  :commands company-lsp
-  :after (lsp company))
+  (use-package lsp-mode
+    :commands lsp
+    :hook ((c++-mode scala-mode) . (lambda ()
+                                       (lsp))))
+
+  (use-package lsp-ui
+    :commands lsp-ui-mode
+    :after lsp)
+
+  (use-package consult-lsp)
+  (use-package company-lsp
+    :commands company-lsp
+    :after (lsp company))
 #+END_SRC
 
 #+RESULTS:
@@ -1249,19 +1250,17 @@ sudo pacman -S ccls
 We also need the [[https://melpa.org/#/ccls][emacs package]].
 
 #+begin_src emacs-lisp :tangle yes
-(use-package ccls
-  :disabled t
-  :hook ((c-mode c++-mode objc-mode cuda-mode) .
-         (lambda ()
-           (ccls-code-lens-mode))))
+  (use-package ccls
+    :disabled t
+    :hook ((c-mode c++-mode objc-mode cuda-mode) .
+           (lambda ()
+             (ccls-code-lens-mode))))
 
-(setq ccls-executable "/usr/bin/ccls")
-(use-package lsp-clangd
-  :after lsp)
+  (setq ccls-executable "/usr/bin/ccls")
+  (use-package lsp-clangd
+    :after lsp)
 
-(setq lsp-clangd-binary-path "/usr/bin/clangd")
-(setq lsp-disabled-clients '(ccls))
-
+  (setq lsp-disabled-clients '(ccls))
 #+end_src
 
 
@@ -1471,19 +1470,9 @@ Make reading stuff in Emacs easier.
   :bind (("C-s" . swiper)))
 (use-package ivy-yasnippet
   :after (ivy yasnippet))
-(use-package ivy-posframe
-  :after (ivy)
-  :disabled t
-  :config
-  (ivy-posframe-mode)
-  (setq ivy-posframe-parameters
-        '((left-fringe . 8)
-          (right-fringe . 8))
-        ivy-posframe-border-width 5
-        ivy-posframe-min-width 480))
 (use-package ivy-rich
   :diminish (ivy-rich-mode . "")
-  :after (ivy ivy-posframe)
+  :after (ivy)
   :config (ivy-rich-mode 1))
 #+END_SRC
 

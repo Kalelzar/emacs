@@ -122,13 +122,13 @@
 (defun consult-kill-buffers-interactively ()
   "Kill multiple buffers using `completing-read-multiple'."
   (interactive)
-  (when-let* ((buffers-to-kill (consult-completing-read-multiple "Kill buffer: "
+  (when-let* ((buffers-to-kill (selectrum-completing-read-multiple "Kill buffer: "
                                                                  (consult--buffer-query :sort 'alpha
                                                                                         :as #'buffer-name)
                                                                  nil
                                                                  t
                                                                  (buffer-name)))
-              (killed-buffers-count (count t (mapcar #'kill-buffer buffers-to-kill))))
+              (killed-buffers-count (cl-count t (mapcar #'kill-buffer buffers-to-kill))))
     (message "Successfully deleted %d buffers." killed-buffers-count)))
 
 (bind-key "k" #'consult-kill-buffers-interactively ctl-x-map)

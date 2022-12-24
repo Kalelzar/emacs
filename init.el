@@ -23,7 +23,14 @@
   (setq framemove-hook-into-windmove t))
 
 
-(use-package org :pin gnu)
+(use-package org :pin gnu
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python . t)
+     (C . t)
+     (shell . t)
+     (lisp . t))))
 (use-package org-contrib)
 
 ;; Enable vertico
@@ -35,7 +42,7 @@
   ;; (setq vertico-scroll-margin 0)
 
   ;; Show more candidates
-  (setq vertico-count 12)
+  (setq vertico-count 20)
 
   ;; Grow and shrink the Vertico minibuffer
   (setq vertico-resize t)
@@ -57,8 +64,8 @@
     ;; Still sort by history position, length and alphabetically
     (setq files (vertico-sort-history-length-alpha files))
     ;; But then move directories first
-    (let ((dir-then-files (nconc (sort (seq-filter (lambda (x) (string-suffix-p "/" x)) files) #'string<)
-				 (sort (seq-remove (lambda (x) (string-suffix-p "/" x)) files) #'string<))))
+    (let ((dir-then-files (nconc (seq-filter (lambda (x) (string-suffix-p "/" x)) files)
+				 (seq-remove (lambda (x) (string-suffix-p "/" x)) files))))
       (nconc (seq-remove (lambda (x) (string-prefix-p "." x)) dir-then-files)
 	     (seq-filter (lambda (x) (string-prefix-p "." x)) dir-then-files))
       ))
@@ -166,8 +173,8 @@
   (corfu-auto t)                 ;; Enable auto completion
   ;; (corfu-commit-predicate nil)   ;; Do not commit selected candidates on next input
   (corfu-quit-at-boundary t)     ;; Automatically quit at word boundary
-  ;; (corfu-quit-no-match t)        ;; Automatically quit if there is no match
-  ;; (corfu-echo-documentation nil) ;; Do not show documentation in the echo area
+  (corfu-quit-no-match t)        ;; Automatically quit if there is no match
+  ;;(corfu-echo-documentation t) ;; Do not show documentation in the echo area
   ;; (corfu-scroll-margin 5)        ;; Use scroll margin
   ;; (corfu-preview-current nil)    ;; Do not preview current candidate
   
@@ -188,7 +195,12 @@
   :init
   (global-corfu-mode))
 
-
+(use-package corfu-doc
+  :after corfu
+  :custom
+  (corfu-doc-max-height 14)
+  :init
+  (corfu-doc-mode t))
 
 (use-package embark
   :ensure t
@@ -270,6 +282,33 @@ targets."
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
+(cl-defmacro key-closure (key-sequence docstring &body form)
+  "Return a closure that will repeat the provided KEY-SEQUENCE when called."
+  `(cl-flet ((key-closure-func ()
+               ,docstring
+               (interactive)
+               (message "%s" (nth (- vertico--index 1) vertico--candidates))
+               (let ((extended-key-sequence (format "%s " ,key-sequence vertico--index)))
+                 (setq unread-command-events (listify-key-sequence (kbd extended-key-sequence)))
+)))
+     (let ((it (cl-function key-closure-func)))
+     ,@form)))
+
+(defmacro alias-key (key-sequence alias keymap docstring)
+  "Treat KEY-SEQUENCE as if it were ALIAS in a KEYMAP."
+  `(key-closure ,alias ,docstring (bind-key ,key-sequence it ,keymap)))
+
+(setq bind-key-describe-special-forms t)
+
+(alias-key "C-k"
+           "C-u C-. k y"
+           'vertico-map
+           "Kill buffer at point")
+
+
+(bind-key "C-x r v" #'register-to-point)
+(bind-key "C-x x" #'replace-regexp) 
+
 (use-package kind-icon
   :ensure t
   :after corfu
@@ -278,6 +317,12 @@ targets."
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
+(use-package ansi-color
+  :config
+  (defun colorize-compilation-buffer ()
+    (when (eq major-mode 'compilation-mode)
+      (ansi-color-apply-on-region compilation-filter-start (point-max))))
+  :hook (compilation-filter . colorize-compilation-buffer))
 
 (use-package all-the-icons)
 (use-package all-the-icons-completion
@@ -311,6 +356,8 @@ targets."
   (defun crm-indicator (args)
     (cons (concat "[Multiple] " (car args)) (cdr args)))
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+;  (defalias 'completing-read-multiple 'magit-completing-read-multiple)
   
   ;; Do not allow the cursor in the minibuffer prompt
   (setq minibuffer-prompt-properties
@@ -346,6 +393,7 @@ targets."
           :face 'marginalia-file-name))))))
 
 (require 'module-jq)
+(require 'module-projectile)
 
 (when (eql system-type 'gnu/linux)
   (require 'module-bluetooth)
@@ -356,10 +404,96 @@ targets."
   (require 'module-playerctl)
   (require 'module-exwm-quicklaunch)
   (require 'module-exwm)
+  (require 'module-batch)
+  (require 'module-eglot)
 
   (use-package pinentry)
   (pinentry-start))
 
+(setq c-doc-comment-style
+      '((java-mode . javadoc)
+        (pike-mode . autodoc)
+        (c-mode    . gtkdoc)
+        (c++-mode  . doxygen)))
+
+(defun xdg-open (what)
+  (var cmd (format " xdg-open '%s'" what)
+       (start-process "xdg-open" cmd "xdg-open" what)))
+
+(defmacro with-xdg-open (command)
+  (var new-name (intern (format "%s-open-dwim" (symbol-name command)))
+       `(defun ,new-name ()
+          (interactive)
+          (xdg-open (,command)))))
+
+;(with-xdg-open cme-pick-book)
+
+(unbind-key "C-z")
+(unbind-key "C-x C-z")
+
+(defun buffer-major-mode-name (buffer)
+  (with-current-buffer buffer
+    (var major-mode-string (if (stringp mode-name) mode-name (or (and (eql (car mode-name) :eval) (eval (plist-get mode-name :eval))) (car mode-name)))
+         (propertize major-mode-string 'face 'outline-1))))
+
+(defun display-buffer-history ()
+  (interactive)
+  (let* ((next (-map #'buffer-name (window-next-buffers)))
+        (current (buffer-name (current-buffer)))
+        (prev (--remove
+               (or (string= it current) (var -compare-fn #'string= (-contains? next it))) 
+               (--map (buffer-name (car it)) (window-prev-buffers)))))
+
+    (var max-length (max
+                     (--reduce-from (max acc (length it)) 0 next)
+                     (+ (length current) 2)
+                     (--reduce-from (max acc (length it)) 0 prev))
+    
+    (let ((next-string (s-join "\n" (reverse (--map (format "%s %s" (s-pad-right max-length " " it) (buffer-major-mode-name it)) next))))
+          (current-string (format "> %s %s" (propertize (s-pad-right (- max-length 2) " " current)  'face 'success) (buffer-major-mode-name current)))
+          (prev-string (s-join "\n" (--map (format "%s %s" (s-pad-right max-length " " it) (buffer-major-mode-name it)) prev))))
+      (exwm-show-msg (format "%s\n%s\n%s" next-string current-string prev-string)
+                     :timeout 1)))))
+
+
+
+(defun previous-buffer-with-history ()
+  (interactive)
+  (previous-buffer)
+  (display-buffer-history))
+
+(defun next-buffer-with-history ()
+  (interactive)
+  (next-buffer)
+  (display-buffer-history))
+
+(use-package ligature
+  :config
+  ;; Enable the "www" ligature in every possible major mode
+  (ligature-set-ligatures 't '("www"))
+  ;; Enable traditional ligature support in eww-mode, if the
+  ;; `variable-pitch' face supports it
+  (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
+  ;; Enable all Cascadia Code ligatures in programming modes
+  (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+                                       ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+                                       "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+                                       "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+                                       "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+                                       "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+                                       "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+                                       "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+                                       ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+                                       "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+                                       "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+                                       "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+                                       "\\\\" "://"))
+  ;; Enables ligature checks globally in all buffers.  You can also do it
+  ;; per mode with `ligature-mode'.
+  (global-ligature-mode t))
+
+(display-battery-mode)
+(iwctl-display-mode)
 
 
 (put 'upcase-region 'disabled nil)

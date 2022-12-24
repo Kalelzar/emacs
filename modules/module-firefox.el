@@ -29,15 +29,14 @@
 (require 'f)
 
 (use-package emacsql)
-(use-package emacsql-sqlite)
-
-(require 'emacsql)
-(require 'emacsql-sqlite)
+(use-package emacsql-sqlite
+  :after emacsql)
 
 (defvar firefox-profile-path "~/.mozilla/firefox/auk2pako.default-release/")
 (defvar firefox-places-db (f-join firefox-profile-path "places.sqlite"))
 
 (defconst firefox-places-query [:select [visit_count url title frecency] :from moz_places])
+
 ;; (defconst firefox-places-query-string
 ;;   (let* ((db (emacsql-sqlite firefox-places-db))
 ;;          (expr (emacsql-compile db firefox-places-query)))
@@ -50,6 +49,14 @@
                                    ".unlocked' '"
                                    firefox-places-query-string
                                    "' | dump-firefox-places-to-json")))
+
+(when (f-exists? firefox-profile-path)
+  (defconst firefox-places-query-string
+    (let* ((db (emacsql-sqlite firefox-places-db))
+           (expr (emacsql-compile db firefox-places-query)))
+      (emacsql-close db)
+      expr))
+  (defvar firefox-recent-urls (json-read-from-string (dump-firefox-places-to-json))))
 
 
 ;; (defvar firefox-recent-urls (json-read-from-string (dump-firefox-places-to-json)))

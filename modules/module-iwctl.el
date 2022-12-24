@@ -24,14 +24,13 @@
 
 ;;; Code:
 
-
 (defvar iwctl-station "wlan0")
 
 (defvar iwctl--signal-strength-bar-width 60)
 
 (defconst iwctl--scan-networks-command "iwctl station %s scan")
 
-(defconst iwctl--read-networks-command "iwctl station %s get-networks | perl -pe 's/^(.*?\\[0m|[[:space:]]+)(.*?)([*]+).*/\\2\\3/g' | sed -E 's/[[:space:]]+/,/g' | grep '*' | perl -pe 's/^(.*?),/(:ssid \"\\1\",/g' | sed -E 's/,([a-z]+),/ :security \"\\1\",/g;s/,(.*)$/ :signal \"\\1\")/' | tr -d '\n' | sed \"s/^/'(/;s/$/)/\"")
+(defconst iwctl--read-networks-command "iwctl station %s get-networks | sed -E 's/[[:space:]]{2,}/,/g' | perl -pe 's/^.*,(.*),(.*),([*]*).*,$/(:ssid \"\\1\" :security \"\\2\" :signal \"\\3\")/' | grep --color=never '*' | tr -d '\n' | sed -E \"s/(.*)/'(\\1)/\"")
 
 (defconst iwctl--read-current-network-command "iwctl station %s show | grep -E 'State|Connected network' | sed -E 's/^[[:space:]]+//;s/[[:space:]]{2,}/;/g' | cut -d';' -f2 | tr '\n' ',' | perl -pe 's/(.*?),(?:(.*),)?$/(:status \"\\1\" :ssid \"\\2\")/g'")
 
@@ -90,7 +89,8 @@
                                         :to 5.0
                                         :width iwctl--signal-strength-bar-width
                                         :label "[Signal Strength]")))
-      (plist-put network :signal signal-bar)))
+    (plist-put (plist-put network :signal signal-bar)
+               :signal-strength signal-level)))
 
 (defun iwctl--read-known-networks ()
   (eval (car (read-from-string (shell-command-to-string "iwctl known-networks list | grep , | cut -d, -f1 | sed -E 's/[[:space:]]+/,/g' | cut -d, -f2 | sed -E 's/(.*)/\"\\1\" /g' | tr -d '\n' | sed \"s/$/)/;s/^/\'(/\"")))))
@@ -134,7 +134,8 @@
 
 (defun iwctl-connect (network)
   (interactive (list (iwctl-read-network)))
-  (if (iwctl-known-p network)
+  (when (string= (plist-get iwctl--current-network-cache :ssid) network) (shell-command-to-string (format "iwctl station %s disconnect %s" iwctl-station network)))
+  (if (iwctl-known-p network) 
       (shell-command-to-string (format "iwctl station %s connect %s" iwctl-station network))
     (let ((data (seq-find #'(lambda (x) (string= (plist-get x :ssid) network)) iwctl--network-cache)))
         (if (string= (plist-get data :security) "open")
@@ -145,6 +146,36 @@
                                                     (read-passwd (format "Passphrase for '%s': " network)))))))))
 
 (add-to-list 'marginalia-annotator-registry '(iwctl-wifi marginalia-annotate-iwctl-wifi builtin none))
+
+(defun iwctl-get-current-network ()
+  (iwctl--update-cache)
+  (var current-network (iwctl--read-current-network)
+       (seq-find #'(lambda (x) (string= (plist-get x :ssid) (plist-get current-network :ssid))) iwctl--network-cache)))
+
+(defun iwctl-mode-line-function ()
+  (setq iwctl-mode-line-string
+        (if-var current-network (iwctl-get-current-network)
+                (let ((ssid (plist-get current-network :ssid)))
+                  (format "%s%s" (all-the-icons-material "signal_wifi_4_bar") ssid))
+                (format "%s" (all-the-icons-material "signal_wifi_off")))))
+
+(defvar iwctl-mode-line-string "")
+(defvar iwctl-mode-line-timer nil)
+
+(define-minor-mode iwctl-display-mode
+  "Toggle network status display in mode line (Display iwctl mode).
+
+The text displayed in the mode line is controlled by `iwctl-mode-line-function'.
+The mode line is be updated every 5 seconds."
+  :global t
+  (setq iwctl-mode-line-string "")
+  (or global-mode-string (setq global-mode-string '("")))
+  (and iwctl-mode-line-timer (cancel-timer iwctl-mode-line-timer))
+  (if (not iwctl-display-mode)
+      (setq global-mode-string 
+	    (delq 'iwctl-mode-line-string global-mode-string))
+    (add-to-list 'global-mode-string 'iwctl-mode-line-string t)
+    (setq iwctl-mode-line-timer (run-with-timer nil 5 #'iwctl-mode-line-function))))
 
 (provide 'module-iwctl)
 ;;; module-iwctl.el ends here
