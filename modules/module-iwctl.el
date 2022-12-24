@@ -142,7 +142,7 @@
           (message (shell-command-to-string (format "iwctl station %s connect %s --passphrase %s"
                                                     iwctl-station
                                                     network
-                                                    (read-passwd (format "Passphrase for '%s': " network)))))))))x
+                                                    (read-passwd (format "Passphrase for '%s': " network)))))))))
 
 (add-to-list 'marginalia-annotator-registry '(iwctl-wifi marginalia-annotate-iwctl-wifi builtin none))
 
