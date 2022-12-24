@@ -130,10 +130,10 @@ COMMAND is a string that matches any of the following:
     (marginalia--fields
      ((car (alist-get "title" metadata '("Unknown") nil #'string=))
       :face font-lock-builtin-face
-      :truncate (/ marginalia-truncate-width 2))
+      :truncate (/ marginalia-field-width 2))
      ((car (alist-get "artist" metadata '("Unknown") nil #'string=))
       :face font-lock-comment-face
-      :truncate (round (/ marginalia-truncate-width 3)))
+      :truncate (round (/ marginalia-field-width 3)))
      ((car (alist-get "album" metadata '("") nil #'string=))
       :face font-lock-keyword-face
       :truncate (round (/ marginalia-truncate-width 1.5))))))
