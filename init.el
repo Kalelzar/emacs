@@ -1,11 +1,15 @@
 ;;; init.el --- PL -*- lexical-binding: t; -*-
+;;; Commentary:
 ;;; Setup MELPA
+
+;;; Code:
 
 (add-to-list 'load-path (concat user-emacs-directory "modules"))
 
 (require 'module-basic)
 (require 'module-vterm)
 (require 'module-consult)
+(require 'framemove)
 
 (use-package which-key
   :init (which-key-mode)
@@ -14,7 +18,10 @@
   (setq which-key-allow-imprecise-window-fit nil))
 
 (use-package windmove
-  :init (windmove-default-keybindings))
+  :init
+  (windmove-default-keybindings)
+  (setq framemove-hook-into-windmove t))
+
 
 (use-package org :pin gnu
   :config
@@ -349,6 +356,7 @@ targets."
   (defun crm-indicator (args)
     (cons (concat "[Multiple] " (car args)) (cdr args)))
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
 ;  (defalias 'completing-read-multiple 'magit-completing-read-multiple)
   
   ;; Do not allow the cursor in the minibuffer prompt
@@ -487,6 +495,7 @@ targets."
 (display-battery-mode)
 (iwctl-display-mode)
 
-(provide 'init)
 
 (put 'upcase-region 'disabled nil)
+(provide 'init)
+;;; init.el ends here

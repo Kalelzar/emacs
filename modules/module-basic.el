@@ -117,6 +117,8 @@
 (use-package smooth-scrolling)
 (smooth-scrolling-mode)
 
+(use-package f)
+
 (use-package bar-cursor
   :init
   (bar-cursor-mode 1)
@@ -158,6 +160,8 @@ If called interactively, the module is selected via `pick-module'."
 
 (use-package winner
   :init (winner-mode))
+
+(unbind-key "C-z")
 
 (use-package hydra)
 

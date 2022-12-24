@@ -23,8 +23,8 @@
 ;;
 
 ;;; Code:
-(use-package posframe)
 
+(use-package posframe)
 
 (use-package exwm
   :after consult
@@ -33,6 +33,8 @@
   ;; Set the initial workspace number.
   (unless (get 'exwm-workspace-number 'saved-value)
     (setq exwm-workspace-number 1)))
+
+(require 'exwm-workspace-group)
 
 (defface exwm-alert-face
   '((default . (:height 1.6)))
@@ -125,12 +127,16 @@ Run 'man date' for more details.")
           ;; (,(kbd "<XF86MonBrightnessDown>") . xbacklight-dec-dwim)
           ([?\s-=] . xbacklight-inc-dwim)
           ([?\s--] . xbacklight-dec-dwim)
+          (,(kbd "H-<left>") . windmove-left)
+          (,(kbd "H-<right>") . windmove-right)
+          (,(kbd "H-<up>") . windmove-up)
+          (,(kbd "H-<down>") . windmove-down)
           ;; 'H-N': Switch to certain workspace.
           ,@(mapcar (lambda (i)
                       `(,(kbd (format "H-%d" i)) .
                         (lambda ()
                           (interactive)
-                          (exwm-workspace-switch-create ,i))))
+                          (ewg/switch-create-group ,i))))
                     (number-sequence 0 9)))))
 ;; Line-editing shortcuts
 ;; (unless (get 'exwm-input-simulation-keys 'saved-value)
@@ -175,14 +181,14 @@ Run 'man date' for more details.")
 
 (add-to-list 'consult-buffer-sources 'exwm-buffer-source)
 
-(require 'exwm-randr)
-(setq exwm-randr-workspace-output-plist '(1 "HDMI-1-0" 0 "eDP1"))
-(add-hook 'exwm-randr-screen-change-hook (lambda () (start-process-shell-command "xrandr" nil "xrandr --output HDMI-1-0 --left-of eDP1 --auto")))
 
-(exwm-randr-enable)
+(ewg/init (list "HDMI-1-0" "eDP1"))
+
 (exwm-enable)
 
 (fringe-mode 10)
+
+
 
 (provide 'module-exwm)
 ;;; module-exwm.el ends here
