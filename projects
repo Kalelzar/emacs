@@ -1,6 +1,7 @@
 ;;; -*- lisp-data -*-
-(("~/Code/cpp/Regressal/")
- ("~/Code/cpp/Alpackage/")
- ("~/.local/src/natalie/")
+(("~/Code/cpp/Kal/")
  ("~/")
+ ("~/Code/cpp/Alpackage/")
+ ("~/Code/cpp/Regressal/")
+ ("~/.local/src/natalie/")
  ("~/.config/emacs/"))
