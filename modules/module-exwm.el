@@ -24,8 +24,6 @@
 
 ;;; Code:
 
-
-
 (use-package exwm
   :after consult
   :demand t
@@ -33,6 +31,8 @@
   ;; Set the initial workspace number.
   (unless (get 'exwm-workspace-number 'saved-value)
     (setq exwm-workspace-number 1)))
+
+(require 'exwm-workspace-group)
 
 (defface exwm-alert-face
   '((default . (:height 1.6)))
@@ -105,12 +105,16 @@ Run 'man date' for more details.")
           ([?\H-a] . exwm-show-time)
           ([?\s-=] . xbacklight-inc-dwim)
           ([?\s--] . xbacklight-dec-dwim)
+          (,(kbd "H-<left>") . windmove-left)
+          (,(kbd "H-<right>") . windmove-right)
+          (,(kbd "H-<up>") . windmove-up)
+          (,(kbd "H-<down>") . windmove-down)
           ;; 'H-N': Switch to certain workspace.
           ,@(mapcar (lambda (i)
                       `(,(kbd (format "H-%d" i)) .
                         (lambda ()
                           (interactive)
-                          (exwm-workspace-switch-create ,i))))
+                          (ewg/switch-create-group ,i))))
                     (number-sequence 0 9)))))
 ;; Line-editing shortcuts
 (unless (get 'exwm-input-simulation-keys 'saved-value)
@@ -155,9 +159,13 @@ Run 'man date' for more details.")
 
 (add-to-list 'consult-buffer-sources 'exwm-buffer-source)
 
+(ewg/init (list "DVI-D-0" "HDMI-0"))
+
 (exwm-enable)
 
 (fringe-mode 10)
+
+
 
 (provide 'module-exwm)
 ;;; module-exwm.el ends here
