@@ -27,7 +27,7 @@
 (require 'consult)
 (require 'marginalia)
 (require 's)
-(require 'hydra)
+(use-package hydra)
 
 
 (use-package pulseaudio-control
