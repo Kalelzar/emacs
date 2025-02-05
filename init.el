@@ -193,14 +193,8 @@
   ;; Recommended: Enable Corfu globally.
   ;; This is recommended since dabbrev can be used globally (M-/).
   :init
-  (global-corfu-mode))
-
-(use-package corfu-doc
-  :after corfu
-  :custom
-  (corfu-doc-max-height 14)
-  :init
-  (corfu-doc-mode t))
+  (global-corfu-mode)
+  (corfu-popupinfo-mode))
 
 (use-package embark
   :ensure t
@@ -466,7 +460,6 @@ targets."
   (interactive)
   (next-buffer)
   (display-buffer-history))
-
 (use-package ligature
   :config
   ;; Enable the "www" ligature in every possible major mode
@@ -493,8 +486,7 @@ targets."
   (global-ligature-mode t))
 
 (display-battery-mode)
-(iwctl-display-mode)
-
+;(iwctl-display-mode)
 
 (put 'upcase-region 'disabled nil)
 (provide 'init)

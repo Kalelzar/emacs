@@ -25,11 +25,13 @@
 ;;; Code: 
 
 (defun get-region-or-buffer-string ()
+  "Get the string from the region or the buffer."
   (if (region-active-p)
       (buffer-substring (region-beginning) (region-end))       
     (buffer-substring (buffer-end -1) (buffer-end 1))))
 
 (defun act-on-region-or-buffer (action)
+  "Apply ACTION to the region or the buffer."
   (interactive (list (org-read-function "Action: ")))
   (let* ((str (get-region-or-buffer-string))
          (curried (-partial action str)))
@@ -45,6 +47,7 @@
 
 
 (defun jq-on-region-or-buffer ()
+  "Run jq on the region or the buffer."
   (interactive)
   (act-on-region-or-buffer  #'(lambda (data)
                                 (shell-command-to-string
@@ -54,6 +57,7 @@
                                   (read-string "JQ query: "))))))
 
 (defun jq-format ()
+  "Format the region or the buffer with jq."
   (interactive)
   (act-on-region-or-buffer  #'(lambda (data)
                                 (shell-command-to-string

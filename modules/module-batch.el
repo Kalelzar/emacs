@@ -35,17 +35,22 @@
   timer
   (arglist nil :type plist))
 
-(defvar command-batch-table (make-hash-table))
+(defvar command-batch-table (make-hash-table) "A hash table of command-batches.")
 
 (cl-defmacro var (varname initform &body body)
+  "Bind VARNAME to INITFORM for the duration of BODY."
   `(let ((,varname ,initform))
      ,@body))
 
 (cl-defmacro when-var (varname initform &body body)
+  "Bind VARNAME to INITFORM for the duration of BODY.
+  If INITFORM is nil, do nothing."
   `(when-let ((,varname ,initform))
      ,@body))
 
 (cl-defmacro if-var (varname initform success failure)
+  "Bind VARNAME to INITFORM for the duration of SUCCESS.
+  If INITFORM is nil, execute FAILURE."
   `(if-let ((,varname ,initform))
        ,success
      ,failure))

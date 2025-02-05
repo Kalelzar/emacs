@@ -182,7 +182,7 @@ Run 'man date' for more details.")
 (add-to-list 'consult-buffer-sources 'exwm-buffer-source)
 
 
-(ewg/init (list "HDMI-1-0" "eDP1"))
+(ewg/init (list "eDP1" "HDMI-1-0"))
 
 (exwm-enable)
 
